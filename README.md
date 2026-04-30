@@ -11,7 +11,6 @@
 
 * **Caso:**  Actividad Sísmica Ecuador
 * **Dataset:** [Catálogo Sísmico IG-EPN](https://www.igepn.edu.ec/solicitud-de-datos-sismicos)
-=======
 ---
 
 ##  Actividad Práctica
