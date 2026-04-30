@@ -117,7 +117,7 @@ df_all = load_data()
 # ── Cabecera ───────────────────────────────────────────────────────────────
 col_logo, col_tabs, col_space = st.columns([2, 3, 1])
 with col_logo:
-    st.markdown("### 📈 Monitor Sísmico\n<small style='color:#888'>IG-EPN · ECUADOR</small>", unsafe_allow_html=True)
+    st.markdown("###  Monitor Sísmico\n<small style='color:#888'>IG-EPN · ECUADOR</small>", unsafe_allow_html=True)
 with col_tabs:
     tab_sel = st.radio("Vista", ["Dashboard", "Predicciones"],
                        horizontal=True, label_visibility="collapsed")
