@@ -11,20 +11,20 @@ from datetime import datetime
 def cargar_datos_crudos():
     """Carga datos crudos del catálogo sísmico"""
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    path = os.path.join(base, "data", "raw", "cat_origen_2012_2025.txt")
+    path = os.path.join(base, "00_datos_crudos", "cat_origen_2012_2025.txt")
     
-    print(f"📂 Cargando datos desde: {path}")
+    print(f"Cargando datos desde: {path}")
     
     # pd.read_csv con formato no estándar
     df = pd.read_csv(path, comment='#', skipinitialspace=True)
     df.columns = df.columns.str.strip()
     
-    print(f"✅ Datos cargados: {len(df)} registros, {len(df.columns)} columnas")
+    print(f"Datos cargados: {len(df)} registros, {len(df.columns)} columnas")
     return df
 
 def transformar_datos(df):
     """Aplica transformaciones al dataset"""
-    print("\n🔄 Aplicando transformaciones...")
+    print("\nAplicando transformaciones...")
     
     # 1. Convertir time_value a datetime; extraer año, mes y categorías
     print("  - Convirtiendo fechas y extrayendo componentes temporales")
@@ -83,19 +83,19 @@ def transformar_datos(df):
     despues = len(df)
     print(f"    Registros eliminados: {antes - despues}")
     
-    print(f"✅ Transformaciones completadas: {len(df)} registros válidos")
+    print(f"Transformaciones completadas: {len(df)} registros válidos")
     return df
 
 def guardar_parquet(df):
     """Guarda el dataset procesado en formato Parquet"""
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    output_dir = os.path.join(base, "data", "processed")
+    output_dir = os.path.join(base, "01_datos_procesados")
     output_path = os.path.join(output_dir, "sismos_procesados.parquet")
     
     # Crear directorio si no existe
     os.makedirs(output_dir, exist_ok=True)
     
-    print(f"\n💾 Guardando datos procesados en: {output_path}")
+    print(f"\nGuardando datos procesados en: {output_path}")
     
     # Seleccionar columnas relevantes (solo las que existen)
     columnas = [
@@ -117,44 +117,44 @@ def guardar_parquet(df):
     
     # Calcular tamaño del archivo
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
-    print(f"✅ Archivo guardado: {size_mb:.2f} MB")
+    print(f"Archivo guardado: {size_mb:.2f} MB")
     
     return output_path
 
 def generar_estadisticas(df):
     """Genera estadísticas del dataset procesado"""
-    print("\n📊 ESTADÍSTICAS DEL DATASET PROCESADO")
+    print("\nESTADISTICAS DEL DATASET PROCESADO")
     print("=" * 60)
     
-    print(f"\n📈 Dimensiones:")
+    print(f"\nDimensiones:")
     print(f"  - Total de eventos: {len(df):,}")
     print(f"  - Columnas: {len(df.columns)}")
     print(f"  - Período: {df['year'].min()} - {df['year'].max()}")
     
-    print(f"\n🌍 Distribución por Región:")
+    print(f"\nDistribucion por Region:")
     for region, count in df['region'].value_counts().items():
         pct = (count / len(df)) * 100
         print(f"  - {region}: {count:,} ({pct:.1f}%)")
     
-    print(f"\n📊 Distribución por Categoría:")
+    print(f"\nDistribucion por Categoria:")
     for cat, count in df['categoria'].value_counts().items():
         pct = (count / len(df)) * 100
         print(f"  - {cat}: {count:,} ({pct:.1f}%)")
     
-    print(f"\n🔢 Estadísticas de Magnitud:")
+    print(f"\nEstadisticas de Magnitud:")
     print(f"  - Media: {df['magnitude'].mean():.2f}")
     print(f"  - Mediana: {df['magnitude'].median():.2f}")
     print(f"  - Mínima: {df['magnitude'].min():.2f}")
     print(f"  - Máxima: {df['magnitude'].max():.2f}")
     print(f"  - Desv. Estándar: {df['magnitude'].std():.2f}")
     
-    print(f"\n📏 Estadísticas de Profundidad:")
+    print(f"\nEstadisticas de Profundidad:")
     print(f"  - Media: {df['depth'].mean():.2f} km")
     print(f"  - Mediana: {df['depth'].median():.2f} km")
     print(f"  - Mínima: {df['depth'].min():.2f} km")
     print(f"  - Máxima: {df['depth'].max():.2f} km")
     
-    print(f"\n📅 Eventos por Año:")
+    print(f"\nEventos por Año:")
     for year, count in df['year'].value_counts().sort_index().items():
         print(f"  - {year}: {count:,}")
     
@@ -162,7 +162,7 @@ def generar_estadisticas(df):
 
 def main():
     """Función principal del pipeline"""
-    print("🚀 PIPELINE DE PROCESAMIENTO DE DATOS SÍSMICOS")
+    print("PIPELINE DE PROCESAMIENTO DE DATOS SISMICOS")
     print("=" * 60)
     print(f"Fecha de ejecución: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
@@ -179,8 +179,8 @@ def main():
     # 4. Generar estadísticas
     generar_estadisticas(df_procesado)
     
-    print("\n✅ PIPELINE COMPLETADO EXITOSAMENTE")
-    print(f"📁 Archivo de salida: {output_path}")
+    print("\nPIPELINE COMPLETADO EXITOSAMENTE")
+    print(f"Archivo de salida: {output_path}")
 
 if __name__ == "__main__":
     main()

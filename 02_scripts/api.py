@@ -46,7 +46,7 @@ class RespuestaEventos(BaseModel):
 def cargar_datos():
     """Carga y procesa el dataset de eventos sísmicos"""
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    path = os.path.join(base, "data", "raw", "cat_origen_2012_2025.txt")
+    path = os.path.join(base, "00_datos_crudos", "cat_origen_2012_2025.txt")
     
     df = pd.read_csv(path, comment='#', skipinitialspace=True)
     df.columns = df.columns.str.strip()

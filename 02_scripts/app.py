@@ -152,7 +152,7 @@ col_logo, col_tabs, col_space = st.columns([2, 3, 1])
 with col_logo:
     st.markdown("###  Monitor Sísmico\n<small style='color:#888'>IG-EPN · ECUADOR</small>", unsafe_allow_html=True)
 with col_tabs:
-    tab_sel = st.radio("Vista", ["Dashboard", "Predicciones"],
+    tab_sel = st.radio("Vista", ["Dashboard", "Análisis de Patrones", "Predicciones"],
                        horizontal=True, label_visibility="collapsed")
 
 st.divider()
@@ -167,7 +167,7 @@ if tab_sel == "Dashboard":
         st.markdown("##### FILTROS")
         fc1, fc2, fc3, fc4, fc5, fc6, fc7 = st.columns(7)
         with fc1:
-            date_from = st.date_input("DESDE", value=pd.to_datetime("2024-04-24"))
+            date_from = st.date_input("DESDE", value=pd.to_datetime("2012-01-01"))
         with fc2:
             date_to   = st.date_input("HASTA", value=pd.to_datetime("2026-04-24"))
         with fc3:
@@ -349,6 +349,105 @@ if tab_sel == "Dashboard":
             )
         )
         st.plotly_chart(fig_freq, use_container_width=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  ANÁLISIS DE PATRONES HORARIOS
+# ══════════════════════════════════════════════════════════════════════════════
+elif tab_sel == "Análisis de Patrones":
+    st.markdown("### 🕰️ Análisis de Patrones por Horario y Zona")
+    st.caption("Identifica concentraciones de actividad sísmica en ventanas de tiempo específicas.")
+
+    # ── Configuración del Patrón ───────────────────────────────────────────
+    with st.container():
+        c1, c2, c3, c4 = st.columns([1.5, 1.5, 1.5, 1])
+        with c1:
+            h_start, h_end = st.select_slider(
+                "RANGO DE HORAS (24H)",
+                options=list(range(24)),
+                value=(17, 20)
+            )
+        with c2:
+            reg_patron = st.selectbox("ZONA / REGIÓN", ["Todas","Norte","Centro","Sur"], key="reg_patron")
+        with c3:
+            mag_min_patron = st.number_input("MAGNITUD MÍNIMA", value=1.0, step=0.5, key="mag_min_patron")
+        with c4:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.button("Actualizar Análisis", use_container_width=True)
+
+    # ── Procesamiento de Datos del Patrón ──────────────────────────────────
+    dp = df_all.copy()
+    # Filtro de hora
+    dp = dp[(dp['hour'] >= h_start) & (dp['hour'] <= h_end)]
+    # Filtro de zona
+    if reg_patron != "Todas":
+        dp = dp[dp['region'] == reg_patron]
+    # Filtro de magnitud
+    dp = dp[dp['magnitude'] >= mag_min_patron]
+
+    total_patron = len(dp)
+    
+    # ── Indicadores del Patrón ─────────────────────────────────────────────
+    k1, k2, k3 = st.columns(3)
+    with k1:
+        st.markdown(f"""
+        <div class="kpi-card">
+          <div class="kpi-label">EVENTOS EN EL RANGO</div>
+          <div class="kpi-value">{total_patron}</div>
+          <span class="kpi-badge badge-blue">{h_start}:00 - {h_end}:00</span>
+        </div>""", unsafe_allow_html=True)
+    with k2:
+        perc = (total_patron / len(df_all) * 100) if len(df_all) else 0
+        st.markdown(f"""
+        <div class="kpi-card">
+          <div class="kpi-label">% DEL TOTAL HISTÓRICO</div>
+          <div class="kpi-value">{perc:.1f}%</div>
+          <span class="kpi-badge badge-green">Representatividad</span>
+        </div>""", unsafe_allow_html=True)
+    with k3:
+        avg_m = round(dp['magnitude'].mean(), 2) if total_patron else 0
+        st.markdown(f"""
+        <div class="kpi-card">
+          <div class="kpi-label">MAGNITUD PROMEDIO</div>
+          <div class="kpi-value">{avg_m}</div>
+          <span class="kpi-badge badge-orange">En este horario</span>
+        </div>""", unsafe_allow_html=True)
+
+    st.divider()
+
+    # ── Visualización del Patrón ───────────────────────────────────────────
+    col_map_p, col_dist_p = st.columns([1.5, 1])
+
+    with col_map_p:
+        st.markdown(f'<div class="section-title">📍 Distribución Espacial del Patrón ({h_start}:00 - {h_end}:00)</div>', unsafe_allow_html=True)
+        
+        m_patron = folium.Map(location=[-1.83, -78.18], zoom_start=6, tiles="CartoDB positron")
+        
+        # Mostrar solo una muestra si son demasiados para no ralentizar
+        sample_p = dp.sample(min(500, len(dp)), random_state=42) if len(dp) > 500 else dp
+        
+        for _, row in sample_p.iterrows():
+            folium.CircleMarker(
+                location=[row['lat'], row['lon']],
+                radius=row['magnitude'] * 1.2,
+                color="#6366f1", weight=1, fill=True, fill_opacity=0.4,
+                tooltip=f"Hora: {row['hour']}:00 | Mag: {row['magnitude']}"
+            ).add_to(m_patron)
+        
+        st_folium(m_patron, height=400, use_container_width=True)
+
+    with col_dist_p:
+        st.markdown('<div class="section-title">📊 Histograma Horario Detallado</div>', unsafe_allow_html=True)
+        if total_patron:
+            # Mostrar la distribución dentro de las horas del día para ver si hay picos
+            by_hour = dp.groupby('hour').size().reset_index(name='count')
+            fig_h = px.bar(by_hour, x='hour', y='count', 
+                          labels={'hour':'Hora', 'count':'Eventos'},
+                          color_discrete_sequence=['#6366f1'])
+            fig_h.update_layout(height=400, margin=dict(l=20, r=20, t=20, b=20),
+                               xaxis=dict(tickmode='linear', tick0=0, dtick=1))
+            st.plotly_chart(fig_h, use_container_width=True)
+
+    st.info(f"💡 Este análisis permite ver si en la zona **{reg_patron}**, durante el intervalo **{h_start}:00 - {h_end}:00**, existe una acumulación inusual de eventos en comparación con otros horarios.")
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  PREDICCIONES
