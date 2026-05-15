@@ -15,6 +15,7 @@
 
 ##  Actividad Práctica
 
+
 ### 1. Entorno Virtual y Estructura de Carpetas 
 
 El proyecto cuenta con la siguiente estructura de carpetas:
