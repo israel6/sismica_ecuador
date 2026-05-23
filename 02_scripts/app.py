@@ -472,89 +472,87 @@ else:
     st.markdown("### 🔮 Predicción y Análisis de Riesgo Sísmico")
     st.caption("Esta sección combina dos modelos: la predicción de magnitudes mediante Random Forest y la estimación geoespacial con KDE.")
     
-    if rf_model is not None:
+   if rf_model is not None:
+        # ------------------------------------------------------------------
+        # 1. Simulador de Magnitud (Random Forest)
+        # ------------------------------------------------------------------
         st.markdown('<div class="section-title">1. Simulador de Magnitud (Random Forest)</div>', unsafe_allow_html=True)
         st.markdown("""
         Ingresa las coordenadas y la profundidad del hipocentro para estimar la magnitud de un posible sismo 
         según el patrón histórico entrenado en el modelo Random Forest.
         """)
-        
-        # Simulador de RF
+
+        # --- 1. Control de Estado Explicito (Session State único) -------------
+        if 'rf_lat' not in st.session_state:
+            st.session_state.rf_lat = -1.50
+        if 'rf_lon' not in st.session_state:
+            st.session_state.rf_lon = -78.50
+        if 'rf_depth' not in st.session_state:
+            st.session_state.rf_depth = 25.0
+
+        # --- 2. Captura Anticipada del Mapa para Evitar Desfases --------------
+        if "mapa_rf_unico" in st.session_state and st.session_state["mapa_rf_unico"]:
+            mapa_salida = st.session_state["mapa_rf_unico"]
+            pos_nueva = None
+            
+            if mapa_salida.get('last_marker_moved'):
+                pos_nueva = mapa_salida['last_marker_moved']
+            elif mapa_salida.get('last_object_clicked_with_refresh'):
+                pos_nueva = mapa_salida['last_object_clicked_with_refresh']
+                
+            if pos_nueva:
+                nueva_lat = round(pos_nueva['lat'], 2)
+                nueva_lon = round(pos_nueva['lng'], 2)
+                # Evitamos recargas infinitas si las coordenadas no cambiaron
+                if nueva_lat != st.session_state.rf_lat or nueva_lon != st.session_state.rf_lon:
+                    st.session_state.rf_lat = nueva_lat
+                    st.session_state.rf_lon = nueva_lon
+                    st.rerun()
+
+        # --- 3. Ejecución del Modelo Matemático -------------------------------
+        # Preparamos los datos con el formato que espera tu Random Forest
+        input_data = pd.DataFrame([[st.session_state.rf_lat, st.session_state.rf_lon, st.session_state.rf_depth]], columns=['lat', 'lon', 'depth'])
+        pred_mag = rf_model.predict(input_data)[0]
+
+        # --- 4. Diseño de la Interfaz en Columnas Limpias ---------------------
         col_rf_inputs, col_rf_outputs = st.columns([1.2, 1.8])
-        
+
         with col_rf_inputs:
-            # Contenedor visual para los controles
-            st.markdown("<div style='background-color:#ffffff; padding:1.2rem; border-radius:12px; border:1px solid #e0e4e8;'>", unsafe_allow_html=True)
-            # --- Session state initialization ---------------------------------
-            # Default coordinates are set to the center of Ecuador
-            if 'rf_lat' not in st.session_state:
-                st.session_state.rf_lat = -1.5
-            if 'rf_lon' not in st.session_state:
-                st.session_state.rf_lon = -78.5
-            if 'rf_depth' not in st.session_state:
-                st.session_state.rf_depth = 25.0
-
-            # --- Map interaction --------------------------------------------
-            # Render the map first to capture any marker movement before
-            # displaying the sliders. This avoids the one‑click lag.
-            m_pred = folium.Map(location=[st.session_state.rf_lat, st.session_state.rf_lon], zoom_start=8, tiles="CartoDB positron")
-            folium.Circle(
-                location=[st.session_state.rf_lat, st.session_state.rf_lon],
-                radius=st.session_state.rf_depth * 1000,
-                color="blue",
-                fill=True,
-                fill_color="blue",
-                fill_opacity=0.2,
-                tooltip="Profundidad simulada"
-            ).add_to(m_pred)
-            folium.Marker(
-                location=[st.session_state.rf_lat, st.session_state.rf_lon],
-                icon=folium.Icon(color="red" if st.session_state.rf_depth >= 6 else "blue", icon="info-sign"),
-                draggable=True
-            ).add_to(m_pred)
-            map_result = st_folium(m_pred, height=270, use_container_width=True, key="mapa_rf")
-            if map_result and map_result.get('last_marker'):
-                st.session_state.rf_lat = map_result['last_marker']['lat']
-                st.session_state.rf_lon = map_result['last_marker']['lng']
-                st.experimental_rerun()
-
-            # --- Sliders for coordinates and depth ------------------------
-            st.session_state.rf_lat = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=st.session_state.rf_lat, step=0.05, format="%.2f")
-            st.session_state.rf_lon = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=st.session_state.rf_lon, step=0.05, format="%.2f")
-            st.session_state.rf_depth = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=st.session_state.rf_depth, step=1.0, format="%.0f")
+            st.markdown("<div style='background-color:#ffffff; padding:1.2rem; border-radius:12px; border:1px solid #e0e4e8; height: 100%;'>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:bold; margin-bottom:0.5rem;'>CONTROLES DEL HIPOCENTRO</p>", unsafe_allow_html=True)
+            
+            # Sliders consumen y actualizan el mismo session_state que el mapa
+            lat_slider = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=st.session_state.rf_lat, step=0.01, format="%.2f")
+            lon_slider = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=st.session_state.rf_lon, step=0.01, format="%.2f")
+            depth_slider = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=st.session_state.rf_depth, step=1.0, format="%.0f")
+            
+            # Sincronización si el usuario mueve el slider manualmente
+            st.session_state.rf_lat = lat_slider
+            st.session_state.rf_lon = lon_slider
+            st.session_state.rf_depth = depth_slider
             st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Predicción con el modelo
-            input_data = pd.DataFrame([[st.session_state.rf_lat, st.session_state.rf_lon, st.session_state.rf_depth]], columns=['lat', 'lon', 'depth'])
-            pred_mag = rf_model.predict(input_data)[0]
-            
+
         with col_rf_outputs:
             subcol_gauge, subcol_map = st.columns([1.1, 1.9])
             
+            # Determinar alertas y colores basados en la predicción real
+            if pred_mag >= 6.0:
+                cat_name, cat_color, cat_badge = "FUERTE", COLOR_FUERTE, "badge-red"
+                cat_desc = "Sismo de gran intensidad. Puede causar daños significativos."
+            elif pred_mag >= 5.0:
+                cat_name, cat_color, cat_badge = "MODERADO", COLOR_MODERADO, "badge-orange"
+                cat_desc = "Sismo moderado. Sentido por la mayoría; daños menores."
+            else:
+                cat_name, cat_color, cat_badge = "LIGERO", COLOR_LIGERO, "badge-green"
+                cat_desc = "Sismo ligero. Sentido levemente; sin daños estructurales."
+
             with subcol_gauge:
-                # Determinar categoría y color
-                if pred_mag >= 6.0:
-                    cat_name = "FUERTE"
-                    cat_color = COLOR_FUERTE
-                    cat_badge = "badge-red"
-                    cat_desc = "Sismo de gran intensidad. Puede causar daños significativos en estructuras."
-                elif pred_mag >= 5.0:
-                    cat_name = "MODERADO"
-                    cat_color = COLOR_MODERADO
-                    cat_badge = "badge-orange"
-                    cat_desc = "Sismo moderado. Sentido por la mayoría; daños menores en edificaciones."
-                else:
-                    cat_name = "LIGERO"
-                    cat_color = COLOR_LIGERO
-                    cat_badge = "badge-green"
-                    cat_desc = "Sismo ligero. Sentido levemente por personas en reposo; sin daños estructurales."
-                
-                # Crear gauge chart
+                # Creación del gráfico de Gauge con Plotly
                 fig_gauge = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = pred_mag,
                     domain = {'x': [0, 1], 'y': [0, 1]},
-                    number = {'font': {'size': 26, 'weight': 'bold'}, 'suffix': " Mw"},
+                    number = {'font': {'size': 24, 'weight': 'bold'}, 'suffix': " Mw"},
                     gauge = {
                         'axis': {'range': [1.0, 8.0], 'tickwidth': 1, 'tickcolor': "#888"},
                         'bar': {'color': cat_color},
@@ -573,62 +571,54 @@ else:
                         }
                     }
                 ))
-                fig_gauge.update_layout(
-                    height=130,
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    paper_bgcolor="white"
-                )
+                fig_gauge.update_layout(height=120, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor="white")
                 
-                # Tarjeta de predicción
+                # Renderizado de Tarjeta Médica Informativa
                 st.markdown(f"""
-                <div style="text-align: center; background:#ffffff; border-radius:12px; padding:0.8rem; border:1px solid #e0e4e8;">
-                    <div class="kpi-label">MAGNITUD ESTIMADA</div>
-                    <div style="margin: -10px 0;">
+                <div style="text-align: center; background:#ffffff; border-radius:12px; padding:0.6rem; border:1px solid #e0e4e8; height: 270px;">
+                    <div class="kpi-label" style="font-weight:bold; font-size:0.8rem;">MAGNITUD ESTIMADA</div>
+                    <div style="margin: -15px 0;">
                 """, unsafe_allow_html=True)
                 st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
                 st.markdown(f"""
                     </div>
-                    <span class="kpi-badge {cat_badge}" style="font-size:0.85rem; padding:4px 14px; margin-bottom:8px;">{cat_name}</span>
-                    <p style="font-size:0.75rem; color:#666; margin-top:8px; line-height:1.3;">{cat_desc}</p>
+                    <span class="kpi-badge {cat_badge}" style="font-size:0.8rem; padding:3px 12px;">{cat_name}</span>
+                    <p style="font-size:0.7rem; color:#666; margin-top:6px; line-height:1.2;">{cat_desc}</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
             with subcol_map:
-                # Mapa interactivo mostrando la ubicación seleccionada
-                # Mapa con marcador arrastrable
-                m_pred = folium.Map(location=[st.session_state.rf_lat, st.session_state.rf_lon], zoom_start=8, tiles="CartoDB positron")
+                # --- MAPA ÚNICO INTERACTIVO ---
+                m_pred = folium.Map(
+                    location=[st.session_state.rf_lat, st.session_state.rf_lon], 
+                    zoom_start=7, 
+                    tiles="CartoDB positron"
+                )
                 
-                # Cargar círculo de zona de influencia del sismo predicho
+                # Círculo verde de la zona de afectación (amarrado dinámicamente)
                 folium.Circle(
                     location=[st.session_state.rf_lat, st.session_state.rf_lon],
-                    radius=pred_mag * 12000, # Radio dinámico según magnitud
+                    radius=pred_mag * 12000,  # Radio cambia según la magnitud calculada
                     color=cat_color,
                     weight=2,
                     fill=True,
                     fill_color=cat_color,
-                    fill_opacity=0.3,
+                    fill_opacity=0.25,
                     tooltip=f"Zona de afectación estimada ({pred_mag:.2f} Mw)"
                 ).add_to(m_pred)
                 
+                # Globo/Marcador arrastrable encima de la zona
                 folium.Marker(
                     location=[st.session_state.rf_lat, st.session_state.rf_lon],
                     icon=folium.Icon(color="red" if pred_mag >= 6.0 else ("orange" if pred_mag >= 5.0 else "blue"), icon="info-sign"),
-                    popup=f"Epicentro simulado:<br>Lat: {st.session_state.rf_lat:.4f}<br>Lon: {st.session_state.rf_lon:.4f}<br>Prof: {st.session_state.rf_depth} km<br>Mag Est: {pred_mag:.2f} Mw",
+                    popup=f"Epicentro:<br>Lat: {st.session_state.rf_lat:.2f}<br>Lon: {st.session_state.rf_lon:.2f}<br>Prof: {st.session_state.rf_depth} km",
                     draggable=True
                 ).add_to(m_pred)
                 
-                # Interact with st_folium to capture marker movement
-                map_result = st_folium(m_pred, height=270, use_container_width=True, key="rf_prediction_map")
-                # Si el usuario mueve el marcador, actualizamos session_state
-                if map_result and map_result.get('last_marker'):
-                    st.session_state.rf_lat = map_result['last_marker']['lat']
-                    st.session_state.rf_lon = map_result['last_marker']['lng']
-                    # Re‑renderizar la página con nuevas coordenadas
-                    st.experimental_rerun()
-                
+                # Renderizado final del componente interactivo usando una única llave maestra
+                st_folium(m_pred, height=270, use_container_width=True, key="mapa_rf_unico")
+
         st.divider()
-    else:
-        st.warning("⚠️ No se encontró el modelo Random Forest entrenado (`random_forest_regressor.joblib`). Se mostrará únicamente el modelo KDE.")
         
     st.markdown('<div class="section-title">2. Estimación de Densidad Geoespacial (Modelo KDE)</div>', unsafe_allow_html=True)
     st.markdown("""
