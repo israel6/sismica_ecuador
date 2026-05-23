@@ -112,25 +112,12 @@ st.markdown("""
 # ── Carga de datos ─────────────────────────────────────────────────────────
 @st.cache_data
 def load_data() -> pd.DataFrame:
-    """
-    Carga y preprocesa el dataset de sismos desde el archivo Parquet.
-    
-    Realiza mapeo de columnas, conversión de tipos y clasificación
-    regional. Utiliza cache de Streamlit para evitar recargas innecesarias.
-    
-    Returns:
-        pd.DataFrame: Dataset limpio y listo para visualización.
-    """
-    # 1. Rutas dinámicas basadas en la estructura de carpetas
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base, "01_datos_procesados", "sismos_procesados.parquet")
     
-    # 2. Carga y limpieza inicial de columnas
     df = pd.read_parquet(path)
     df.columns = df.columns.str.strip()
 
-    # 3. Mapeo flexible de columnas 
-    # Busca nombres comunes y los estandariza
     rename_rules = {
         'time_value': 'date', 
         'latitude_value': 'lat', 
@@ -145,7 +132,6 @@ def load_data() -> pd.DataFrame:
             else:
                 df[new_col] = pd.to_numeric(df[old_col], errors='coerce')
 
-    # 4. Lógica de Magnitud 
     if 'magnitude' not in df.columns:
         m_val = df['magnitude_value_M'] if 'magnitude_value_M' in df.columns else None
         p_val = df['magnitude_value_P'] if 'magnitude_value_P' in df.columns else None
@@ -155,9 +141,7 @@ def load_data() -> pd.DataFrame:
         elif m_val is not None:
             df['magnitude'] = pd.to_numeric(m_val, errors='coerce')
 
-    # 5. Clasificación por Regiones 
     def asignar_region(lat: float) -> str:
-        """Asigna región geográfica basada en la latitud del epicentro."""
         if pd.isna(lat): return 'Desconocida'
         if lat >= 0:    return 'Norte'
         if lat >= -2:   return 'Centro'
@@ -166,8 +150,6 @@ def load_data() -> pd.DataFrame:
     if 'lat' in df.columns:
         df['region'] = df['lat'].apply(asignar_region)
 
-    # 6. Limpieza final y formato para el Dashboard
-    # Eliminamos nulos en columnas críticas para Random Forest y KDE
     columnas_criticas = ['lat', 'lon', 'depth', 'magnitude', 'date']
     df = df.dropna(subset=[col for col in columnas_criticas if col in df.columns]).copy()
     
@@ -180,9 +162,6 @@ df_all = load_data()
 
 @st.cache_resource
 def load_rf_model():
-    """
-    Carga el modelo Random Forest Regressor desde la carpeta de modelos.
-    """
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     model_path = os.path.join(base, "04_modelos", "random_forest_regressor.joblib")
     if os.path.exists(model_path):
@@ -207,7 +186,6 @@ st.divider()
 #  DASHBOARD
 # ══════════════════════════════════════════════════════════════════════════════
 if tab_sel == "Dashboard":
-
     # ── Filtros ────────────────────────────────────────────────────────────
     with st.container():
         st.markdown("##### FILTROS")
@@ -276,11 +254,9 @@ if tab_sel == "Dashboard":
 
         @st.cache_data(show_spinner=False)
         def build_event_map(lats, lons, mags, depths, dates, regions):
-            """Construye mapa Folium con marcadores circulares para cada evento sísmico."""
             m = folium.Map(location=[CENTRO_MAPA_LAT, CENTRO_MAPA_LON], zoom_start=ZOOM_INICIAL,
                            tiles="CartoDB positron")
             for lat, lon, mag, dep, dt, reg in zip(lats, lons, mags, depths, dates, regions):
-                # Asignar color según nivel de magnitud
                 color = COLOR_LIGERO
                 if mag >= MAG_FUERTE:   color = COLOR_FUERTE
                 elif mag >= MAG_MODERADO: color = COLOR_MODERADO
@@ -323,7 +299,7 @@ if tab_sel == "Dashboard":
             tuple(df['magnitude']), tuple(df['depth']),
             tuple(df['date_str']), tuple(df['region'])
         )
-        st_folium(m, height=460, use_container_width=True)
+        st_folium(m, height=460, use_container_width=True, key="dashboard_map")
 
     with col_chart:
         st.markdown('<div class="section-title"> Distribución de Magnitudes</div>', unsafe_allow_html=True)
@@ -405,7 +381,6 @@ elif tab_sel == "Análisis de Patrones":
     st.markdown("### 🕰️ Análisis de Patrones por Horario y Zona")
     st.caption("Identifica concentraciones de actividad sísmica en ventanas de tiempo específicas.")
 
-    # ── Configuración del Patrón ───────────────────────────────────────────
     with st.container():
         c1, c2, c3, c4 = st.columns([1.5, 1.5, 1.5, 1])
         with c1:
@@ -422,19 +397,14 @@ elif tab_sel == "Análisis de Patrones":
             st.markdown("<br>", unsafe_allow_html=True)
             st.button("Actualizar Análisis", use_container_width=True)
 
-    # ── Procesamiento de Datos del Patrón ──────────────────────────────────
     dp = df_all.copy()
-    # Filtro de hora
     dp = dp[(dp['hour'] >= h_start) & (dp['hour'] <= h_end)]
-    # Filtro de zona
     if reg_patron != "Todas":
         dp = dp[dp['region'] == reg_patron]
-    # Filtro de magnitud
     dp = dp[dp['magnitude'] >= mag_min_patron]
 
     total_patron = len(dp)
     
-    # ── Indicadores del Patrón ─────────────────────────────────────────────
     k1, k2, k3 = st.columns(3)
     with k1:
         st.markdown(f"""
@@ -462,15 +432,12 @@ elif tab_sel == "Análisis de Patrones":
 
     st.divider()
 
-    # ── Visualización del Patrón ───────────────────────────────────────────
     col_map_p, col_dist_p = st.columns([1.5, 1])
 
     with col_map_p:
         st.markdown(f'<div class="section-title">📍 Distribución Espacial del Patrón ({h_start}:00 - {h_end}:00)</div>', unsafe_allow_html=True)
         
         m_patron = folium.Map(location=[-1.83, -78.18], zoom_start=6, tiles="CartoDB positron")
-        
-        # Mostrar solo una muestra si son demasiados para no ralentizar
         sample_p = dp.sample(min(MAX_PUNTOS_MAPA, len(dp)), random_state=42) if len(dp) > MAX_PUNTOS_MAPA else dp
         
         for _, row in sample_p.iterrows():
@@ -481,24 +448,23 @@ elif tab_sel == "Análisis de Patrones":
                 tooltip=f"Hora: {row['hour']}:00 | Mag: {row['magnitude']}"
             ).add_to(m_patron)
         
-        st_folium(m_patron, height=400, use_container_width=True)
+        st_folium(m_patron, height=400, use_container_width=True, key="patterns_map")
 
     with col_dist_p:
         st.markdown('<div class="section-title">📊 Histograma Horario Detallado</div>', unsafe_allow_html=True)
         if total_patron:
-            # Mostrar la distribución dentro de las horas del día para ver si hay picos
             by_hour = dp.groupby('hour').size().reset_index(name='count')
             fig_h = px.bar(by_hour, x='hour', y='count', 
                           labels={'hour':'Hora', 'count':'Eventos'},
                           color_discrete_sequence=['#6366f1'])
             fig_h.update_layout(height=400, margin=dict(l=20, r=20, t=20, b=20),
-                               xaxis=dict(tickmode='linear', tick0=0, dtick=1))
+                                xaxis=dict(tickmode='linear', tick0=0, dtick=1))
             st.plotly_chart(fig_h, use_container_width=True)
 
     st.info(f"💡 Este análisis permite ver si en la zona **{reg_patron}**, durante el intervalo **{h_start}:00 - {h_end}:00**, existe una acumulación inusual de eventos en comparación con otros horarios.")
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  PREDICCIONES
+#  PREDICCIONES (INTEGRACIÓN MARCADOR ARRASTRABLE BIDIRECCIONAL)
 # ══════════════════════════════════════════════════════════════════════════════
 else:
     rf_model = load_rf_model()
@@ -507,297 +473,41 @@ else:
     st.caption("Esta sección combina dos modelos: la predicción de magnitudes mediante Random Forest y la estimación geoespacial con KDE.")
     
     if rf_model is not None:
-        st.markdown('<div class="section-title">1. Simulador de Magnitud (Random Forest)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">1. Simulador de Magnitud Dinámico (Random Forest)</div>', unsafe_allow_html=True)
         st.markdown("""
-        Ingresa las coordenadas y la profundidad del hipocentro para estimar la magnitud de un posible sismo 
-        según el patrón histórico entrenado en el modelo Random Forest.
+        **Interactividad en mapa:** Arrastra el marcador azul por el territorio nacional (ej. de Cuenca a Pedernales). 
+        Las coordenadas se capturarán automáticamente y reevaluarán el modelo matemático al instante.
         """)
         
-        # Simulador de RF
+        # Inicializar el estado de sesión para las coordenadas de simulación
+        if "rf_lat_sim" not in st.session_state:
+            st.session_state.rf_lat_sim = CENTRO_MAPA_LAT
+        if "rf_lon_sim" not in st.session_state:
+            st.session_state.rf_lon_sim = CENTRO_MAPA_LON
+
         col_rf_inputs, col_rf_outputs = st.columns([1.2, 1.8])
         
         with col_rf_inputs:
-            st.markdown("<div style='background-color:#ffffff; padding:1.2rem; border-radius:12px; border:1px solid #e0e4e8;'>", unsafe_allow_html=True)
-            rf_lat = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=-1.83, step=0.05, format="%.2f")
-            rf_lon = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=-78.18, step=0.05, format="%.2f")
-            rf_depth = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=25.0, step=1.0, format="%.0f")
-            st.markdown("</div>", unsafe_allow_html=True)
+            # Mapa bidireccional interactivo
+            m_interactivo = folium.Map(
+                location=[st.session_state.rf_lat_sim, st.session_state.rf_lon_sim], 
+                zoom_start=7, 
+                tiles="CartoDB positron"
+            )
             
-            # Predicción con el modelo
-            input_data = pd.DataFrame([[rf_lat, rf_lon, rf_depth]], columns=['lat', 'lon', 'depth'])
-            pred_mag = rf_model.predict(input_data)[0]
+            # Marcador ARRASTRABLE
+            marcador_movible = folium.Marker(
+                location=[st.session_state.rf_lat_sim, st.session_state.rf_lon_sim],
+                popup="Arrastra este pin al epicentro simulado",
+                tooltip="¡Arrástrame para cambiar coordenadas!",
+                draggable=True,
+                icon=folium.Icon(color="blue", icon="info-sign")
+            )
+            marcador_movible.add_to(m_interactivo)
             
-        with col_rf_outputs:
-            subcol_gauge, subcol_map = st.columns([1.1, 1.9])
+            # Renderizar y capturar datos en caliente
+            output_mapa_interactivo = st_folium(m_interactivo, height=340, use_container_width=True, key="mapa_arrastrable_rf")
             
-            with subcol_gauge:
-                # Determinar categoría y color
-                if pred_mag >= 6.0:
-                    cat_name = "FUERTE"
-                    cat_color = COLOR_FUERTE
-                    cat_badge = "badge-red"
-                    cat_desc = "Sismo de gran intensidad. Puede causar daños significativos en estructuras."
-                elif pred_mag >= 5.0:
-                    cat_name = "MODERADO"
-                    cat_color = COLOR_MODERADO
-                    cat_badge = "badge-orange"
-                    cat_desc = "Sismo moderado. Sentido por la mayoría; daños menores en edificaciones."
-                else:
-                    cat_name = "LIGERO"
-                    cat_color = COLOR_LIGERO
-                    cat_badge = "badge-green"
-                    cat_desc = "Sismo ligero. Sentido levemente por personas en reposo; sin daños estructurales."
-                
-                # Crear gauge chart
-                fig_gauge = go.Figure(go.Indicator(
-                    mode = "gauge+number",
-                    value = pred_mag,
-                    domain = {'x': [0, 1], 'y': [0, 1]},
-                    number = {'font': {'size': 26, 'weight': 'bold'}, 'suffix': " Mw"},
-                    gauge = {
-                        'axis': {'range': [1.0, 8.0], 'tickwidth': 1, 'tickcolor': "#888"},
-                        'bar': {'color': cat_color},
-                        'bgcolor': "white",
-                        'borderwidth': 2,
-                        'bordercolor': "#e0e4e8",
-                        'steps': [
-                            {'range': [1.0, 5.0], 'color': '#f3f4f6'},
-                            {'range': [5.0, 6.0], 'color': '#ffedd5'},
-                            {'range': [6.0, 8.0], 'color': '#fee2e2'}
-                        ],
-                        'threshold': {
-                            'line': {'color': "red", 'width': 4},
-                            'thickness': 0.75,
-                            'value': 6.0
-                        }
-                    }
-                ))
-                fig_gauge.update_layout(
-                    height=130,
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    paper_bgcolor="white"
-                )
-                
-                # Tarjeta de predicción
-                st.markdown(f"""
-                <div style="text-align: center; background:#ffffff; border-radius:12px; padding:0.8rem; border:1px solid #e0e4e8;">
-                    <div class="kpi-label">MAGNITUD ESTIMADA</div>
-                    <div style="margin: -10px 0;">
-                """, unsafe_allow_html=True)
-                st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
-                st.markdown(f"""
-                    </div>
-                    <span class="kpi-badge {cat_badge}" style="font-size:0.85rem; padding:4px 14px; margin-bottom:8px;">{cat_name}</span>
-                    <p style="font-size:0.75rem; color:#666; margin-top:8px; line-height:1.3;">{cat_desc}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with subcol_map:
-                # Mapa interactivo mostrando la ubicación seleccionada
-                m_pred = folium.Map(location=[rf_lat, rf_lon], zoom_start=8, tiles="CartoDB positron")
-                
-                # Cargar círculo de zona de influencia del sismo predicho
-                folium.Circle(
-                    location=[rf_lat, rf_lon],
-                    radius=pred_mag * 12000, # Radio dinámico según magnitud
-                    color=cat_color,
-                    weight=2,
-                    fill=True,
-                    fill_color=cat_color,
-                    fill_opacity=0.3,
-                    tooltip=f"Zona de afectación estimada ({pred_mag:.2f} Mw)"
-                ).add_to(m_pred)
-                
-                folium.Marker(
-                    location=[rf_lat, rf_lon],
-                    icon=folium.Icon(color="red" if pred_mag >= 6.0 else ("orange" if pred_mag >= 5.0 else "blue"), icon="info-sign"),
-                    popup=f"Epicentro simulado:<br>Lat: {rf_lat:.4f}<br>Lon: {rf_lon:.4f}<br>Prof: {rf_depth} km<br>Mag Est: {pred_mag:.2f} Mw"
-                ).add_to(m_pred)
-                
-                st_folium(m_pred, height=270, use_container_width=True, key="rf_prediction_map")
-                
-        st.divider()
-    else:
-        st.warning("⚠️ No se encontró el modelo Random Forest entrenado (`random_forest_regressor.joblib`). Se mostrará únicamente el modelo KDE.")
-        
-    st.markdown('<div class="section-title">2. Estimación de Densidad Geoespacial (Modelo KDE)</div>', unsafe_allow_html=True)
-    st.markdown("""
-    Visualiza las áreas calientes de acumulación de sismos históricos. 
-    Ajusta el bandwidth y la magnitud mínima para ver cómo cambia la concentración de riesgo.
-    """)
-    
-    st.markdown("##### PARÁMETROS DEL MODELO KDE")
-    pc1, pc2, pc3, pc4 = st.columns(4)
-    with pc1:
-        bandwidth   = st.slider("BANDWIDTH KDE",   0.1, 2.0, 0.3, 0.1)
-    with pc2:
-        risk_points = st.slider("PUNTOS DE RIESGO", 10, 500, 200, 10)
-    with pc3:
-        mag_min_kde = st.number_input("MAGNITUD MÍNIMA", value=3.5, step=0.5, format="%.1f")
-    with pc4:
-        region_kde  = st.selectbox("REGIÓN TENDENCIA", ["Todas","Norte","Centro","Sur"])
-
-    # Filtrar datos para KDE
-    dk = df_all[df_all['magnitude'] >= mag_min_kde].copy()
-    if region_kde != "Todas":
-        dk = dk[dk['region'] == region_kde]
-    dk = dk.dropna(subset=['lat','lon','magnitude','date_str'])
-
-    total_kde = len(dk)
-
-    # ── Mapa KDE ───────────────────────────────────────────────────────────
-    @st.cache_data(show_spinner=False)
-    def build_kde_map(bw: float, n_risk: int, mag_min_k: float, reg: str):
-        """
-        Construye mapa de zonas de riesgo usando estimación de densidad kernel (KDE).
-        
-        Args:
-            bw: Bandwidth del kernel gaussiano.
-            n_risk: Número de puntos de riesgo a evaluar.
-            mag_min_k: Magnitud mínima para incluir en el análisis.
-            reg: Región a filtrar ('Todas' para incluir todo).
-            
-        Returns:
-            tuple: (mapa Folium, total de eventos usados)
-        """
-        data = df_all[df_all['magnitude'] >= mag_min_k].copy()
-        if reg != "Todas":
-            data = data[data['region'] == reg]
-        data = data.dropna(subset=['lat','lon','magnitude','date_str'])
-
-        m = folium.Map(location=[CENTRO_MAPA_LAT, CENTRO_MAPA_LON], zoom_start=7,
-                       tiles="CartoDB positron")
-
-        # Puntos históricos — máximo para rendimiento
-        hist = data.sample(min(MAX_PUNTOS_HISTORICOS, len(data)), random_state=1)
-        for _, row in hist.iterrows():
-            folium.CircleMarker(
-                location=[row['lat'], row['lon']],
-                radius=3, color="transparent",
-                fill=True, fill_color="#94a3b8", fill_opacity=0.5,
-                popup=f"Mag: {row['magnitude']} | {row['date_str']}"
-            ).add_to(m)
-
-        # Zonas KDE
-        sample = data.sample(min(n_risk, len(data)), random_state=42)
-        mag_arr = sample['magnitude'].values
-        mag_min_v = mag_arr.min()
-        rng = (mag_arr.max() - mag_min_v) or 1
-
-        # Calcular eventos cercanos por zona para el tooltip
-        for _, row in sample.iterrows():
-            norm    = (row['magnitude'] - mag_min_v) / rng
-            opacity = 0.08 + norm * 0.18
-            color   = '#fbbf24' if norm < 0.33 else ('#f97316' if norm < 0.66 else '#ef4444')
-
-            # Nivel de riesgo
-            if norm >= 0.66:
-                nivel = "🔴 ALTO"
-                nivel_txt = "Alta concentración sísmica"
-            elif norm >= 0.33:
-                nivel = "🟠 MODERADO"
-                nivel_txt = "Actividad sísmica moderada"
-            else:
-                nivel = "🟡 BAJO"
-                nivel_txt = "Actividad sísmica baja"
-
-            # Categoría de magnitud
-            if row['magnitude'] >= 6:
-                cat = "Fuerte"
-            elif row['magnitude'] >= 5:
-                cat = "Moderado"
-            else:
-                cat = "Ligero"
-
-            # Contar eventos históricos en radio ~50km de este punto
-            dlat = data['lat'] - row['lat']
-            dlon = data['lon'] - row['lon']
-            cercanos = int(((dlat**2 + dlon**2) < (bw * 0.9)**2).sum())
-
-            tooltip_html = f"""
-            <div style="font-family:sans-serif;min-width:180px;padding:4px">
-              <b style="font-size:13px">{nivel}</b><br>
-              <span style="color:#666;font-size:11px">{nivel_txt}</span>
-              <hr style="margin:6px 0;border-color:#eee">
-              <table style="font-size:12px;width:100%">
-                <tr><td style="color:#888">Magnitud ref.</td><td><b>{row['magnitude']}</b> ({cat})</td></tr>
-                <tr><td style="color:#888">Región</td><td><b>{row['region']}</b></td></tr>
-                <tr><td style="color:#888">Último evento</td><td><b>{row['date_str']}</b></td></tr>
-                <tr><td style="color:#888">Eventos cercanos</td><td><b>{cercanos}</b></td></tr>
-                <tr><td style="color:#888">Densidad KDE</td><td><b>{round(norm, 2)}</b></td></tr>
-              </table>
-            </div>"""
-
-            folium.Circle(
-                location=[row['lat'], row['lon']],
-                radius=bw * 55000,
-                color=None, fill=True,
-                fill_color=color, fill_opacity=opacity,
-                tooltip=folium.Tooltip(tooltip_html, sticky=True),
-                popup=folium.Popup(tooltip_html, max_width=220)
-            ).add_to(m)
-
-        return m, len(data)
-
-    st.markdown(f'<div class="section-title"> Zonas de Riesgo Sísmico &nbsp;<span class="kpi-badge badge-red">Modelo KDE</span></div>', unsafe_allow_html=True)
-
-    with st.spinner("Calculando zonas de riesgo..."):
-        m_kde, total_kde = build_kde_map(bandwidth, risk_points, mag_min_kde, region_kde)
-
-    st_folium(m_kde, height=500, use_container_width=True)
-
-    # Tendencia anual usa dk recalculado desde df_all
-    dk = df_all[df_all['magnitude'] >= mag_min_kde].copy()
-    if region_kde != "Todas":
-        dk = dk[dk['region'] == region_kde]
-    dk = dk.dropna(subset=['lat','lon','magnitude','date_str'])
-
-    # Info modelo
-    st.info(f"🔥 Modelo entrenado con **{total_kde}** eventos históricos.  \n"
-            "Las zonas rojas indican mayor probabilidad de actividad sísmica futura "
-            "basada en densidad histórica (KDE gaussiano con métrica haversine).")
-
-    # ── Tendencia anual ────────────────────────────────────────────────────
-    st.markdown('<div class="section-title"> Tendencia Anual</div>', unsafe_allow_html=True)
-    if total_kde:
-        dk['year'] = dk['date'].dt.year
-        by_year = dk.groupby('year').size().reset_index(name='count')
-        mean_y  = by_year['count'].mean()
-        thresh  = mean_y * 1.5
-        by_year['color'] = by_year['count'].apply(
-            lambda c: '#ef4444' if c >= thresh else '#3b82f6'
-        )
-
-        fig_trend = go.Figure()
-        fig_trend.add_trace(go.Bar(
-            x=by_year['year'].astype(str),
-            y=by_year['count'],
-            marker_color=by_year['color'],
-            hovertemplate='%{x}: %{y} eventos<extra></extra>',
-            showlegend=False
-        ))
-        # Líneas de referencia
-        fig_trend.add_shape(type="line", x0=0, x1=1, xref="paper",
-                            y0=mean_y, y1=mean_y,
-                            line=dict(color="#eab308", width=2, dash="dot"))
-        fig_trend.add_annotation(x=1, xref="paper", y=mean_y,
-                                 text="Media", font=dict(color="#eab308", size=10),
-                                 showarrow=False, xanchor="left")
-        fig_trend.add_shape(type="line", x0=0, x1=1, xref="paper",
-                            y0=thresh, y1=thresh,
-                            line=dict(color="#ef4444", width=2, dash="dot"))
-        fig_trend.add_annotation(x=1, xref="paper", y=thresh,
-                                 text="Umbral anomalía", font=dict(color="#ef4444", size=10),
-                                 showarrow=False, xanchor="left")
-        # Leyenda manual
-        fig_trend.add_trace(go.Bar(x=[None], y=[None], marker_color='#3b82f6', name='Normal', showlegend=True))
-        fig_trend.add_trace(go.Bar(x=[None], y=[None], marker_color='#ef4444', name='Anomalía', showlegend=True))
-
-        fig_trend.update_layout(
-            xaxis_title="Año", yaxis_title="Eventos",
-            height=350, plot_bgcolor="white", paper_bgcolor="white",
-            margin=dict(l=40, r=120, t=20, b=40),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            barmode='overlay'
-        )
-        st.plotly_chart(fig_trend, use_container_width=True)
+            # Detectar el evento de soltar el marcador (DragEnd)
+            if output_mapa_interactivo and output_mapa_interactivo.get("last_marker") is not None:
+                nueva_lat = round(output_mapa_interactivo["last_marker"]["lat"], 4)
