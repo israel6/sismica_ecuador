@@ -517,14 +517,23 @@ else:
         col_rf_inputs, col_rf_outputs = st.columns([1.2, 1.8])
         
         with col_rf_inputs:
+            # Contenedor visual para los controles
             st.markdown("<div style='background-color:#ffffff; padding:1.2rem; border-radius:12px; border:1px solid #e0e4e8;'>", unsafe_allow_html=True)
-            rf_lat = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=-1.83, step=0.05, format="%.2f")
-            rf_lon = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=-78.18, step=0.05, format="%.2f")
-            rf_depth = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=25.0, step=1.0, format="%.0f")
+            # Usamos session_state para mantener la lat/lon entre renders
+            if 'rf_lat' not in st.session_state:
+                st.session_state.rf_lat = -1.83
+            if 'rf_lon' not in st.session_state:
+                st.session_state.rf_lon = -78.18
+            if 'rf_depth' not in st.session_state:
+                st.session_state.rf_depth = 25.0
+            # Slider para coordenadas y profundidad
+            st.session_state.rf_lat = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=st.session_state.rf_lat, step=0.05, format="%.2f")
+            st.session_state.rf_lon = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=st.session_state.rf_lon, step=0.05, format="%.2f")
+            st.session_state.rf_depth = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=st.session_state.rf_depth, step=1.0, format="%.0f")
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Predicción con el modelo
-            input_data = pd.DataFrame([[rf_lat, rf_lon, rf_depth]], columns=['lat', 'lon', 'depth'])
+            input_data = pd.DataFrame([[st.session_state.rf_lat, st.session_state.rf_lon, st.session_state.rf_depth]], columns=['lat', 'lon', 'depth'])
             pred_mag = rf_model.predict(input_data)[0]
             
         with col_rf_outputs:
@@ -594,11 +603,12 @@ else:
                 
             with subcol_map:
                 # Mapa interactivo mostrando la ubicación seleccionada
-                m_pred = folium.Map(location=[rf_lat, rf_lon], zoom_start=8, tiles="CartoDB positron")
+                # Mapa con marcador arrastrable
+                m_pred = folium.Map(location=[st.session_state.rf_lat, st.session_state.rf_lon], zoom_start=8, tiles="CartoDB positron")
                 
                 # Cargar círculo de zona de influencia del sismo predicho
                 folium.Circle(
-                    location=[rf_lat, rf_lon],
+                    location=[st.session_state.rf_lat, st.session_state.rf_lon],
                     radius=pred_mag * 12000, # Radio dinámico según magnitud
                     color=cat_color,
                     weight=2,
@@ -609,12 +619,20 @@ else:
                 ).add_to(m_pred)
                 
                 folium.Marker(
-                    location=[rf_lat, rf_lon],
+                    location=[st.session_state.rf_lat, st.session_state.rf_lon],
                     icon=folium.Icon(color="red" if pred_mag >= 6.0 else ("orange" if pred_mag >= 5.0 else "blue"), icon="info-sign"),
-                    popup=f"Epicentro simulado:<br>Lat: {rf_lat:.4f}<br>Lon: {rf_lon:.4f}<br>Prof: {rf_depth} km<br>Mag Est: {pred_mag:.2f} Mw"
+                    popup=f"Epicentro simulado:<br>Lat: {st.session_state.rf_lat:.4f}<br>Lon: {st.session_state.rf_lon:.4f}<br>Prof: {st.session_state.rf_depth} km<br>Mag Est: {pred_mag:.2f} Mw",
+                    draggable=True
                 ).add_to(m_pred)
                 
-                st_folium(m_pred, height=270, use_container_width=True, key="rf_prediction_map")
+                # Interact with st_folium to capture marker movement
+                map_result = st_folium(m_pred, height=270, use_container_width=True, key="rf_prediction_map")
+                # Si el usuario mueve el marcador, actualizamos session_state
+                if map_result and map_result.get('last_marker'):
+                    st.session_state.rf_lat = map_result['last_marker']['lat']
+                    st.session_state.rf_lon = map_result['last_marker']['lng']
+                    # Re‑renderizar la página con nuevas coordenadas
+                    st.experimental_rerun()
                 
         st.divider()
     else:
