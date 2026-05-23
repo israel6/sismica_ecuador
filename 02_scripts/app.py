@@ -325,42 +325,8 @@ if tab_sel == "Dashboard":
         )
         st_folium(m, height=460, use_container_width=True)
 
-    with col_chart:
-        st.markdown('<div class="section-title"> Distribución de Magnitudes</div>', unsafe_allow_html=True)
-        if total:
-            df['mag_bin'] = (np.floor(df['magnitude'] * 10) / 10).round(1)
-            bins = df.groupby('mag_bin').size().reset_index(name='count')
-            bins['color'] = bins['mag_bin'].apply(
-                lambda m: '#ef4444' if m >= 6 else ('#f97316' if m >= 5 else '#3b82f6')
-            )
-            fig_dist = go.Figure(go.Bar(
-                x=bins['mag_bin'].astype(str),
-                y=bins['count'],
-                marker_color=bins['color'],
-                hovertemplate='Mag %{x}: %{y} eventos<extra></extra>'
-            ))
-            fig_dist.add_shape(type="line",
-                x0='5.0', x1='5.0', y0=0, y1=1, yref="paper",
-                line=dict(color="#f97316", width=2, dash="dot"))
-            fig_dist.add_annotation(x='5.0', y=1, yref="paper",
-                text="Moderado", font=dict(color="#f97316", size=10),
-                showarrow=False, yanchor="bottom")
-            fig_dist.add_shape(type="line",
-                x0='6.0', x1='6.0', y0=0, y1=1, yref="paper",
-                line=dict(color="#ef4444", width=2, dash="dot"))
-            fig_dist.add_annotation(x='6.0', y=1, yref="paper",
-                text="Fuerte", font=dict(color="#ef4444", size=10),
-                showarrow=False, yanchor="bottom")
-            fig_dist.update_layout(
-                xaxis_title="Magnitud", yaxis_title="Eventos",
-                showlegend=False, height=460,
-                plot_bgcolor="white", paper_bgcolor="white",
-                margin=dict(l=40, r=20, t=20, b=40),
-                xaxis=dict(tickangle=0)
-            )
-            st.plotly_chart(fig_dist, use_container_width=True)
-        else:
-            st.info("Sin datos para los filtros seleccionados.")
+    # The original layout had only a single column for the interactive map.
+    # The distribution chart was removed to restore the initial structure.
 
     # ── Frecuencia mensual ─────────────────────────────────────────────────
     st.markdown('<div class="section-title"> Frecuencia Mensual por Categoría</div>', unsafe_allow_html=True)
