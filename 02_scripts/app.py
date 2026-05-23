@@ -519,14 +519,40 @@ else:
         with col_rf_inputs:
             # Contenedor visual para los controles
             st.markdown("<div style='background-color:#ffffff; padding:1.2rem; border-radius:12px; border:1px solid #e0e4e8;'>", unsafe_allow_html=True)
-            # Usamos session_state para mantener la lat/lon entre renders
+            # --- Session state initialization ---------------------------------
+            # Default coordinates are set to the center of Ecuador
             if 'rf_lat' not in st.session_state:
-                st.session_state.rf_lat = -1.83
+                st.session_state.rf_lat = -1.5
             if 'rf_lon' not in st.session_state:
-                st.session_state.rf_lon = -78.18
+                st.session_state.rf_lon = -78.5
             if 'rf_depth' not in st.session_state:
                 st.session_state.rf_depth = 25.0
-            # Slider para coordenadas y profundidad
+
+            # --- Map interaction --------------------------------------------
+            # Render the map first to capture any marker movement before
+            # displaying the sliders. This avoids the one‑click lag.
+            m_pred = folium.Map(location=[st.session_state.rf_lat, st.session_state.rf_lon], zoom_start=8, tiles="CartoDB positron")
+            folium.Circle(
+                location=[st.session_state.rf_lat, st.session_state.rf_lon],
+                radius=st.session_state.rf_depth * 1000,
+                color="blue",
+                fill=True,
+                fill_color="blue",
+                fill_opacity=0.2,
+                tooltip="Profundidad simulada"
+            ).add_to(m_pred)
+            folium.Marker(
+                location=[st.session_state.rf_lat, st.session_state.rf_lon],
+                icon=folium.Icon(color="red" if st.session_state.rf_depth >= 6 else "blue", icon="info-sign"),
+                draggable=True
+            ).add_to(m_pred)
+            map_result = st_folium(m_pred, height=270, use_container_width=True, key="mapa_rf")
+            if map_result and map_result.get('last_marker'):
+                st.session_state.rf_lat = map_result['last_marker']['lat']
+                st.session_state.rf_lon = map_result['last_marker']['lng']
+                st.experimental_rerun()
+
+            # --- Sliders for coordinates and depth ------------------------
             st.session_state.rf_lat = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=st.session_state.rf_lat, step=0.05, format="%.2f")
             st.session_state.rf_lon = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=st.session_state.rf_lon, step=0.05, format="%.2f")
             st.session_state.rf_depth = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=st.session_state.rf_depth, step=1.0, format="%.0f")
