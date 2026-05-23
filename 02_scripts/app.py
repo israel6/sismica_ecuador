@@ -472,7 +472,7 @@ else:
     st.markdown("### 🔮 Predicción y Análisis de Riesgo Sísmico")
     st.caption("Esta sección combina dos modelos: la predicción de magnitudes mediante Random Forest y la estimación geoespacial con KDE.")
     
-   if rf_model is not None:
+    if rf_model is not None:
         # ------------------------------------------------------------------
         # 1. Simulador de Magnitud (Random Forest)
         # ------------------------------------------------------------------
