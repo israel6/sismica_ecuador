@@ -1,5 +1,4 @@
 import os
-from sys import path
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -7,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import folium
 from streamlit_folium import st_folium
+import joblib
 
 # ── Constantes de configuración ────────────────────────────────────────────
 TITULO_APP = "Monitor Sísmico | IG-EPN Ecuador"
@@ -177,6 +177,22 @@ def load_data() -> pd.DataFrame:
     return df
 
 df_all = load_data()
+
+@st.cache_resource
+def load_rf_model():
+    """
+    Carga el modelo Random Forest Regressor desde la carpeta de modelos.
+    """
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    model_path = os.path.join(base, "04_modelos", "random_forest_regressor.joblib")
+    if os.path.exists(model_path):
+        try:
+            return joblib.load(model_path)
+        except Exception as e:
+            st.error(f"Error al cargar el modelo Random Forest: {e}")
+            return None
+    return None
+
 # ── Cabecera ───────────────────────────────────────────────────────────────
 col_logo, col_tabs, col_space = st.columns([2, 3, 1])
 with col_logo:
@@ -485,7 +501,132 @@ elif tab_sel == "Análisis de Patrones":
 #  PREDICCIONES
 # ══════════════════════════════════════════════════════════════════════════════
 else:
-    st.markdown("##### PARÁMETROS DEL MODELO")
+    rf_model = load_rf_model()
+    
+    st.markdown("### 🔮 Predicción y Análisis de Riesgo Sísmico")
+    st.caption("Esta sección combina dos modelos: la predicción de magnitudes mediante Random Forest y la estimación geoespacial con KDE.")
+    
+    if rf_model is not None:
+        st.markdown('<div class="section-title">1. Simulador de Magnitud (Random Forest)</div>', unsafe_allow_html=True)
+        st.markdown("""
+        Ingresa las coordenadas y la profundidad del hipocentro para estimar la magnitud de un posible sismo 
+        según el patrón histórico entrenado en el modelo Random Forest.
+        """)
+        
+        # Simulador de RF
+        col_rf_inputs, col_rf_outputs = st.columns([1.2, 1.8])
+        
+        with col_rf_inputs:
+            st.markdown("<div style='background-color:#ffffff; padding:1.2rem; border-radius:12px; border:1px solid #e0e4e8;'>", unsafe_allow_html=True)
+            rf_lat = st.slider("LATITUD", min_value=-5.0, max_value=1.5, value=-1.83, step=0.05, format="%.2f")
+            rf_lon = st.slider("LONGITUD", min_value=-82.0, max_value=-75.0, value=-78.18, step=0.05, format="%.2f")
+            rf_depth = st.slider("PROFUNDIDAD (KM)", min_value=0.0, max_value=300.0, value=25.0, step=1.0, format="%.0f")
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Predicción con el modelo
+            input_data = pd.DataFrame([[rf_lat, rf_lon, rf_depth]], columns=['lat', 'lon', 'depth'])
+            pred_mag = rf_model.predict(input_data)[0]
+            
+        with col_rf_outputs:
+            subcol_gauge, subcol_map = st.columns([1.1, 1.9])
+            
+            with subcol_gauge:
+                # Determinar categoría y color
+                if pred_mag >= 6.0:
+                    cat_name = "FUERTE"
+                    cat_color = COLOR_FUERTE
+                    cat_badge = "badge-red"
+                    cat_desc = "Sismo de gran intensidad. Puede causar daños significativos en estructuras."
+                elif pred_mag >= 5.0:
+                    cat_name = "MODERADO"
+                    cat_color = COLOR_MODERADO
+                    cat_badge = "badge-orange"
+                    cat_desc = "Sismo moderado. Sentido por la mayoría; daños menores en edificaciones."
+                else:
+                    cat_name = "LIGERO"
+                    cat_color = COLOR_LIGERO
+                    cat_badge = "badge-green"
+                    cat_desc = "Sismo ligero. Sentido levemente por personas en reposo; sin daños estructurales."
+                
+                # Crear gauge chart
+                fig_gauge = go.Figure(go.Indicator(
+                    mode = "gauge+number",
+                    value = pred_mag,
+                    domain = {'x': [0, 1], 'y': [0, 1]},
+                    number = {'font': {'size': 26, 'weight': 'bold'}, 'suffix': " Mw"},
+                    gauge = {
+                        'axis': {'range': [1.0, 8.0], 'tickwidth': 1, 'tickcolor': "#888"},
+                        'bar': {'color': cat_color},
+                        'bgcolor': "white",
+                        'borderwidth': 2,
+                        'bordercolor': "#e0e4e8",
+                        'steps': [
+                            {'range': [1.0, 5.0], 'color': '#f3f4f6'},
+                            {'range': [5.0, 6.0], 'color': '#ffedd5'},
+                            {'range': [6.0, 8.0], 'color': '#fee2e2'}
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 4},
+                            'thickness': 0.75,
+                            'value': 6.0
+                        }
+                    }
+                ))
+                fig_gauge.update_layout(
+                    height=130,
+                    margin=dict(l=10, r=10, t=10, b=10),
+                    paper_bgcolor="white"
+                )
+                
+                # Tarjeta de predicción
+                st.markdown(f"""
+                <div style="text-align: center; background:#ffffff; border-radius:12px; padding:0.8rem; border:1px solid #e0e4e8;">
+                    <div class="kpi-label">MAGNITUD ESTIMADA</div>
+                    <div style="margin: -10px 0;">
+                """, unsafe_allow_html=True)
+                st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
+                st.markdown(f"""
+                    </div>
+                    <span class="kpi-badge {cat_badge}" style="font-size:0.85rem; padding:4px 14px; margin-bottom:8px;">{cat_name}</span>
+                    <p style="font-size:0.75rem; color:#666; margin-top:8px; line-height:1.3;">{cat_desc}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with subcol_map:
+                # Mapa interactivo mostrando la ubicación seleccionada
+                m_pred = folium.Map(location=[rf_lat, rf_lon], zoom_start=8, tiles="CartoDB positron")
+                
+                # Cargar círculo de zona de influencia del sismo predicho
+                folium.Circle(
+                    location=[rf_lat, rf_lon],
+                    radius=pred_mag * 12000, # Radio dinámico según magnitud
+                    color=cat_color,
+                    weight=2,
+                    fill=True,
+                    fill_color=cat_color,
+                    fill_opacity=0.3,
+                    tooltip=f"Zona de afectación estimada ({pred_mag:.2f} Mw)"
+                ).add_to(m_pred)
+                
+                folium.Marker(
+                    location=[rf_lat, rf_lon],
+                    icon=folium.Icon(color="red" if pred_mag >= 6.0 else ("orange" if pred_mag >= 5.0 else "blue"), icon="info-sign"),
+                    popup=f"Epicentro simulado:<br>Lat: {rf_lat:.4f}<br>Lon: {rf_lon:.4f}<br>Prof: {rf_depth} km<br>Mag Est: {pred_mag:.2f} Mw"
+                ).add_to(m_pred)
+                
+                st_folium(m_pred, height=270, use_container_width=True, key="rf_prediction_map")
+                
+        st.divider()
+    else:
+        st.warning("⚠️ No se encontró el modelo Random Forest entrenado (`random_forest_regressor.joblib`). Se mostrará únicamente el modelo KDE.")
+        
+    st.markdown('<div class="section-title">2. Estimación de Densidad Geoespacial (Modelo KDE)</div>', unsafe_allow_html=True)
+    st.markdown("""
+    Visualiza las áreas calientes de acumulación de sismos históricos. 
+    Ajusta el bandwidth y la magnitud mínima para ver cómo cambia la concentración de riesgo.
+    """)
+    
+    st.markdown("##### PARÁMETROS DEL MODELO KDE")
     pc1, pc2, pc3, pc4 = st.columns(4)
     with pc1:
         bandwidth   = st.slider("BANDWIDTH KDE",   0.1, 2.0, 0.3, 0.1)
