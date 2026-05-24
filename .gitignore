@@ -1,0 +1,51 @@
+# === Python & Entorno ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+# El venv ahora está en la raíz según image_bdde76.png
+venv/
+.venv/
+ENV/
+env/
+
+# === Streamlit ===
+.streamlit/secrets.toml
+# No ignoramos .streamlit/config.toml para que se mantenga el tema visual
+
+# === Jupyter Notebook ===
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# === Gestión de Datos Sísmicos (IG-EPN) ===
+# Ignoramos todos los archivos pesados en las nuevas carpetas
+00_datos_crudos/*
+01_datos_procesados/*
+
+# Permitimos archivos de texto, la muestra CSV y el archivo Parquet procesado
+!00_datos_crudos/*.md
+!00_datos_crudos/*.txt
+!01_datos_procesados/*.md
+!01_datos_procesados/muestra_sismica.csv
+# Permitir el archivo de sismos procesados si es menor a 100MB
+!01_datos_procesados/sismos_procesados.parquet
+
+# === IDE & OS ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Documentación y Archivo ===
+# Aseguramos que las carpetas de contexto y plan siempre se suban
+!07_CONTEXTO/*.md
+!08_PLAN_Y_EJECUCION/*.md
+
+# === Tests & Cobertura ===
+.pytest_cache/
+.coverage
+htmlcov/
