@@ -400,7 +400,13 @@ if tab_sel == "Dashboard":
         }), include_groups=False).reset_index()
 
         fig_freq = go.Figure()
-        for serie, color in [('Total','#6366f1'),('Ligero','#3b82f6'),('Moderado','#f97316'),('Fuerte','#ef4444')]:
+        # Usar los mismos colores que el histograma de distribución
+        for serie, color in [
+            ('Total', COLOR_PRINCIPAL),      # Morado/Azul principal
+            ('Ligero', COLOR_LIGERO),        # Verde
+            ('Moderado', COLOR_MODERADO),    # Naranja
+            ('Fuerte', COLOR_FUERTE)         # Rojo
+        ]:
             fig_freq.add_trace(go.Scatter(
                 x=monthly['ym'], y=monthly[serie],
                 name=serie, mode='lines', line=dict(color=color, width=2.5, shape='spline'),
