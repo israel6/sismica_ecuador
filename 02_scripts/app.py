@@ -325,8 +325,68 @@ if tab_sel == "Dashboard":
         )
         st_folium(m, height=460, use_container_width=True)
 
-    # The original layout had only a single column for the interactive map.
-    # The distribution chart was removed to restore the initial structure.
+    with col_chart:
+        st.markdown('<div class="section-title"> Distribución de Magnitudes</div>', unsafe_allow_html=True)
+        
+        if total:
+            # Crear bins y asignar colores según magnitud
+            import numpy as np
+            
+            # Definir bins y colores
+            bins = np.linspace(df['magnitude'].min(), df['magnitude'].max(), 31)
+            hist, bin_edges = np.histogram(df['magnitude'], bins=bins)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            
+            # Asignar colores según la magnitud del bin
+            colors = []
+            for mag in bin_centers:
+                if mag < MAG_MODERADO:
+                    colors.append(COLOR_LIGERO)
+                elif mag < MAG_FUERTE:
+                    colors.append(COLOR_MODERADO)
+                else:
+                    colors.append(COLOR_FUERTE)
+            
+            fig_dist = go.Figure()
+            
+            fig_dist.add_trace(go.Bar(
+                x=bin_centers,
+                y=hist,
+                marker=dict(
+                    color=colors,
+                    line=dict(color='white', width=1)
+                ),
+                width=(bin_edges[1] - bin_edges[0]) * 0.9,
+                hovertemplate='Magnitud: %{x:.2f}<br>Eventos: %{y}<extra></extra>'
+            ))
+            
+            # Líneas verticales para umbrales
+            fig_dist.add_vline(x=MAG_MODERADO, line_dash="dash", line_color=COLOR_MODERADO, 
+                              line_width=2,
+                              annotation_text="Moderado (5.0)", 
+                              annotation_position="top right",
+                              annotation_font_size=10)
+            fig_dist.add_vline(x=MAG_FUERTE, line_dash="dash", line_color=COLOR_FUERTE,
+                              line_width=2,
+                              annotation_text="Fuerte (6.0)", 
+                              annotation_position="top right",
+                              annotation_font_size=10)
+            
+            fig_dist.update_layout(
+                xaxis_title="Magnitud",
+                yaxis_title="Eventos",
+                height=460,
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                margin=dict(l=40, r=20, t=30, b=40),
+                showlegend=False,
+                xaxis=dict(showgrid=True, gridcolor='#f0f0f0', range=[df['magnitude'].min()-0.2, df['magnitude'].max()+0.2]),
+                yaxis=dict(showgrid=True, gridcolor='#f0f0f0')
+            )
+            
+            st.plotly_chart(fig_dist, use_container_width=True)
+        else:
+            st.info("No hay datos para mostrar con los filtros actuales")
 
     # ── Frecuencia mensual ─────────────────────────────────────────────────
     st.markdown('<div class="section-title"> Frecuencia Mensual por Categoría</div>', unsafe_allow_html=True)

@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Defensa de Proyecto: Actividad Sísmica Ecuador</title>
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #111827;
+      --bg-card: #1f2937;
+      --accent-color: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #374151;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --glow-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-color);
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      width: 280px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 10;
+      padding: 2rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo-icon {
+      background: var(--accent-gradient);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: #fff;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .logo-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text p {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 1px;
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      list-style: none;
+      flex-grow: 1;
+    }
+
+    .nav-item button {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item button:hover {
+      background-color: rgba(99, 102, 241, 0.08);
+      color: var(--text-main);
+    }
+
+    .nav-item.active button {
+      background: var(--accent-gradient);
+      color: #fff;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .aside-footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 1.5rem;
+      margin-top: auto;
+    }
+
+    .aside-footer p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Main Content Wrapper */
+    main {
+      margin-left: 280px;
+      flex-grow: 1;
+      padding: 2.5rem 3rem;
+      max-width: 1200px;
+    }
+
+    /* Top Stats Grid */
+    .header-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .header-section h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #fff 30%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-section p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent-color);
+    }
+
+    .stat-card.blue::after { background-color: #3b82f6; }
+    .stat-card.orange::after { background-color: #f97316; }
+    .stat-card.red::after { background-color: #ef4444; }
+    .stat-card.green::after { background-color: #10b981; }
+
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Search and Controls Bar */
+    .controls-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      align-items: center;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.85rem 1rem 0.85rem 2.75rem;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: var(--glow-shadow);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-action {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.85rem 1.25rem;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background-color: var(--bg-card);
+      border-color: var(--text-muted);
+    }
+
+    .btn-action.primary {
+      background: var(--accent-gradient);
+      border: none;
+      color: #fff;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .btn-action.primary:hover {
+      filter: brightness(1.1);
+    }
+
+    /* Tips Banner */
+    .tips-banner {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .tips-icon {
+      color: var(--accent-color);
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+
+    .tips-content h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .tips-content p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Definition Highlight Card */
+    .definition-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed var(--border-color);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .definition-card h5 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      color: #fff;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .definition-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Accordion Questions List */
+    .questions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .question-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .question-card:hover {
+      border-color: var(--accent-color);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .question-header {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      gap: 1.5rem;
+      user-select: none;
+    }
+
+    .question-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .question-tag {
+      align-self: flex-start;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .question-tag.general { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .question-tag.dashboard { background-color: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .question-tag.rf { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .question-tag.kde { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .question-tag.defensa { background-color: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+
+    .question-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .question-arrow {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .question-card.open .question-arrow {
+      transform: rotate(180deg);
+      background-color: var(--accent-color);
+      color: #fff;
+    }
+
+    .question-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-top: 1px solid transparent;
+    }
+
+    .question-card.open .question-body {
+      max-height: 2000px;
+      border-color: var(--border-color);
+    }
+
+    .answer-content {
+      padding: 1.25rem 1.5rem;
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .answer-paragraph {
+      font-size: 0.92rem;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    .answer-bullet-list {
+      margin-left: 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .answer-bullet-item {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    .answer-bullet-item strong {
+      color: #fff;
+    }
+
+    .answer-highlight {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--warning-color);
+      padding: 0.75rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin-top: 0.75rem;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .answer-highlight.danger {
+      background: rgba(239, 68, 68, 0.08);
+      border-left-color: var(--danger-color);
+    }
+
+    .answer-highlight.info {
+      background: rgba(99, 102, 241, 0.08);
+      border-left-color: var(--accent-color);
+    }
+
+    /* Print styling */
+    @media print {
+      aside {
+        display: none;
+      }
+      main {
+        margin-left: 0;
+        padding: 0;
+      }
+      .question-card {
+        page-break-inside: avoid;
+        border: 1px solid #000;
+        background: #fff;
+        color: #000;
+        margin-bottom: 1rem;
+      }
+      .question-body {
+        max-height: none !important;
+        display: block !important;
+        border-top: 1px solid #000;
+      }
+      .question-title {
+        color: #000 !important;
+      }
+      .answer-bullet-item strong, .answer-content, .answer-paragraph {
+        color: #000 !important;
+      }
+      .question-arrow {
+        display: none;
+      }
+      .controls-bar, .tips-banner, .definition-card {
+        display: none;
+      }
+      body {
+        background-color: #fff;
+        color: #000;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      aside {
+        width: 80px;
+        padding: 2rem 0.5rem;
+      }
+      .logo-text, .aside-footer, .nav-item span {
+        display: none;
+      }
+      .logo-container {
+        justify-content: center;
+      }
+      .nav-item button {
+        justify-content: center;
+        padding: 0.85rem;
+      }
+      main {
+        margin-left: 80px;
+        padding: 2rem;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      aside {
+        display: none;
+      }
+      main {
+        margin-left: 0;
+        padding: 1.5rem;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside>
+    <div class="logo-container">
+      <div class="logo-icon">S</div>
+      <div class="logo-text">
+        <h1>SÍSMICA</h1>
+        <p>Ecuador · Defensa</p>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item active" data-category="todos">
+        <button onclick="filterCategory('todos')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          <span>Todos los Temas</span>
+        </button>
+      </li>
+      <li class="nav-item" data-category="general">
+        <button onclick="filterCategory('general')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          <span>General y ETL</span>
+        </button>
+      </li>
+      <li class="nav-item" data-category="dashboard">
+        <button onclick="filterCategory('dashboard')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2"></path></svg>
+          <span>Dashboard y API</span>
+        </button>
+      </li>
+      <li class="nav-item" data-category="rf">
+        <button onclick="filterCategory('rf')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span>Random Forest</span>
+        </button>
+      </li>
+      <li class="nav-item" data-category="kde">
+        <button onclick="filterCategory('kde')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span>Modelo KDE</span>
+        </button>
+      </li>
+      <li class="nav-item" data-category="defensa">
+        <button onclick="filterCategory('defensa')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span>Tips de Defensa</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="aside-footer">
+      <p>Proyecto Sísmica Ecuador</p>
+      <p style="font-size:0.65rem; margin-top:4px;">Grupo 5 · 2026</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <main>
+    <div class="header-section">
+      <h2>Preguntas de Defensa</h2>
+      <p>Cuestionario conciso de estudio para la sustentación del proyecto.</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-label">Total Preguntas</div>
+        <div class="stat-value" id="stat-total">25</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Random Forest</div>
+        <div class="stat-value">6</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Modelo KDE</div>
+        <div class="stat-value">5</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Dashboard y API</div>
+        <div class="stat-value">6</div>
+      </div>
+    </div>
+
+    <!-- Tips Banner -->
+    <div class="tips-banner">
+      <div class="tips-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 113.536 0V21h2v-2.243a5.002 5.002 0 01-3.536 0z"></path>
+        </svg>
+      </div>
+      <div class="tips-content">
+        <h4>Respuesta de Seguridad</h4>
+        <p>Ante la pregunta: <em>¿Su sistema predice cuándo va a ocurrir un sismo?</em>. Responde con firmeza: <strong>No. Ningún modelo en el mundo predice el tiempo exacto de un sismo.</strong> Nuestro proyecto estima el <strong>potencial de magnitud esperado</strong> en el espacio (Random Forest) y la **probabilidad geográfica de acumulación** (KDE) para mitigar riesgos.</p>
+      </div>
+    </div>
+
+    <!-- Search & Controls -->
+    <div class="controls-bar">
+      <div class="search-wrapper">
+        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <input type="text" id="search-input" class="search-input" placeholder="Filtrar preguntas (ej. 'overfitting', 'cache', 'haversine')..." oninput="searchQuestions()">
+      </div>
+      <button class="btn-action" onclick="expandAll()">Expandir Todo</button>
+      <button class="btn-action" onclick="collapseAll()">Colapsar Todo</button>
+      <button class="btn-action primary" onclick="window.print()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        PDF / Imprimir
+      </button>
+    </div>
+
+    <!-- Questions Container -->
+    <div class="questions-container" id="questions-container">
+      
+      <!-- ==================== GENERAL Y ETL ==================== -->
+      <div class="question-card" data-cat="general">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag general">General y ETL</span>
+            <div class="question-title">1. ¿Cuál es la pregunta de negocio principal y por qué es relevante?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph"><strong>Pregunta central:</strong> ¿Cómo identificar y predecir las zonas de mayor riesgo sísmico en Ecuador para optimizar la asignación de recursos de prevención y respuesta?</p>
+            <p class="answer-paragraph"><strong>Relevancia:</strong> Ecuador se sitúa en el Cinturón de Fuego del Pacífico (zona de subducción). Identificar hotspots permite salvar vidas mediante simulacros focalizados, mejorar normas de construcción y asignar brigadas con eficiencia presupuestaria.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="general">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag general">General y ETL</span>
+            <div class="question-title">2. ¿De dónde provienen los datos y qué periodo de tiempo abarcan?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph"><strong>Fuente:</strong> Catálogo oficial del Instituto Geofísico de la Escuela Politécnica Nacional (IG-EPN).</p>
+            <p class="answer-paragraph"><strong>Periodo:</strong> Del año 2012 al 2025 (13 años de registros históricos), consolidando un dataset final de <strong>3,369 sismos</strong> válidos.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="general">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag general">General y ETL</span>
+            <div class="question-title">3. ¿Qué transformaciones clave se aplicaron en el pipeline de ETL?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Conversión de tipos:</strong> Fechas a `datetime` y coordenadas/profundidades/magnitud a flotantes (`float64`).</li>
+              <li class="answer-bullet-item"><strong>Imputación de magnitud:</strong> Relleno de datos nulos unificando `magnitude_value_M` con `P`.</li>
+              <li class="answer-bullet-item"><strong>Variables derivadas:</strong> Región (Norte, Centro, Sur) según la latitud; Categorías de Magnitud (Ligero/Moderado/Fuerte) y Profundidad (Superficial/Intermedio/Profundo).</li>
+              <li class="answer-bullet-item"><strong>Limpieza:</strong> Eliminación estricta de valores nulos en columnas críticas y exportación a Parquet.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="general">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag general">General y ETL</span>
+            <div class="question-title">4. ¿Por qué se utilizó el formato Parquet en lugar de CSV para los datos procesados?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Por <strong>rendimiento y optimización de recursos</strong>:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Almacenamiento:</strong> Almacena de forma columnar comprimida, reduciendo espacio en disco.</li>
+              <li class="answer-bullet-item"><strong>Preservación del esquema:</strong> Mantiene los tipos de datos exactos sin necesidad de redefinirlos al leerlos.</li>
+              <li class="answer-bullet-item"><strong>Carga ultra rápida:</strong> Acelera drásticamente la recarga de datos en Streamlit al usar `@st.cache_data`.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="general">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag general">General y ETL</span>
+            <div class="question-title">5. ¿Qué sesgos presenta el dataset y cómo se mitigaron?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Sesgo instrumental:</strong> Sismos recientes leves parecen más frecuentes por la mejora histórica de sismógrafos. Se mitiga filtrando sismos menores (magnitud &ge; 3.5) en análisis de riesgo sísmico.</li>
+              <li class="answer-bullet-item"><strong>Sesgo físico:</strong> Ausencia de variables de suelo o fallas. Se mitiga definiendo el alcance como un modelo netamente probabilístico e histórico, no de simulación física en tiempo real.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DASHBOARD Y API ==================== -->
+      <div class="question-card" data-cat="dashboard">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag dashboard">Dashboard y API</span>
+            <div class="question-title">6. ¿Cómo se estructuró la arquitectura de software del proyecto?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Es una arquitectura modular e independiente dividida en 3 capas:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Datos (ETL):</strong> Modulo (`process_data.py`) que procesa y escribe el archivo Parquet.</li>
+              <li class="answer-bullet-item"><strong>Backend (FastAPI):</strong> API REST (`api.py`) que expone los datos y KPIs para clientes externos.</li>
+              <li class="answer-bullet-item"><strong>Frontend (Streamlit):</strong> Dashboard interactivo (`app.py`) con visualizaciones en Plotly, mapas y ejecución en caliente del modelo de predicción.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="dashboard">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag dashboard">Dashboard y API</span>
+            <div class="question-title">7. ¿Por qué son necesarios `@st.cache_data` y `@st.cache_resource` en Streamlit?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Porque Streamlit vuelve a ejecutar todo el código de arriba a abajo ante cada interacción del usuario. El almacenamiento en caché evita retardos:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>`@st.cache_data`:</strong> Almacena en memoria resultados de lectura de datos y cálculos puros (ej. DataFrame de sismos y capas de mapas).</li>
+              <li class="answer-bullet-item"><strong>`@st.cache_resource`:</strong> Mantiene persistente en memoria el modelo cargado de Random Forest (`.joblib`), evitando inicializarlo repetidamente.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="dashboard">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag dashboard">Dashboard y API</span>
+            <div class="question-title">8. ¿Cómo interactúa Streamlit con el mapa dinámico de Folium?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Utiliza la librería `streamlit-folium`:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item">Se dibuja un mapa base con marcadores circulares de sismos.</li>
+              <li class="answer-bullet-item">El tamaño es proporcional a su magnitud (`radio = mag * 1.5`) y el color indica la categoría de alerta (verde, naranja, rojo).</li>
+              <li class="answer-bullet-item">El componente retorna a Streamlit un diccionario interactivo; cuando detecta un clic en el mapa, captura las coordenadas lat/lon del evento.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="dashboard">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag dashboard">Dashboard y API</span>
+            <div class="question-title">9. ¿Cómo funciona la reactividad del simulador de sismos?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Sincroniza coordenadas en tiempo real:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item">El clic del usuario en el mapa actualiza las variables en `st.session_state` y dispara `st.rerun()`.</li>
+              <li class="answer-bullet-item">Los sliders de entrada se alinean automáticamente con las coordenadas seleccionadas.</li>
+              <li class="answer-bullet-item">El backend pasa estos datos instantáneamente al modelo Random Forest y actualiza en pantalla la magnitud estimada y el radio de afectación.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="dashboard">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag dashboard">Dashboard y API</span>
+            <div class="question-title">10. ¿Cómo escalaría la API de FastAPI para soportar millones de registros?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Base de Datos Espacial:</strong> Conectando a una base PostgreSQL/PostGIS para realizar filtros geográficos indexados.</li>
+              <li class="answer-bullet-item"><strong>Paginación:</strong> Restringiendo el número de resultados mediante parámetros de `limit` y `offset`.</li>
+              <li class="answer-bullet-item"><strong>Asincronía:</strong> Declarando los endpoints como `async def` para permitir concurrencia de peticiones no bloqueantes.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="dashboard">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag dashboard">Dashboard y API</span>
+            <div class="question-title">11. ¿Qué es el Middleware de CORS en la API y para qué sirve?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph"><strong>CORS (Cross-Origin Resource Sharing):</strong> Mecanismo de seguridad del navegador.</p>
+            <p class="answer-paragraph">Se habilitó en FastAPI (`allow_origins=["*"]`) para permitir que la web de Streamlit, u otra aplicación cliente externa en un dominio distinto, acceda a los datos de la API en formato JSON sin ser bloqueados.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== RANDOM FOREST ==================== -->
+      <div class="question-card" data-cat="rf">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag rf">Random Forest</span>
+            <div class="question-title">12. ¿Qué significa y cómo funciona el modelo Random Forest Regressor?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            
+            <div class="definition-card">
+              <h5>Definición de Random Forest Regressor</h5>
+              <p>Es un modelo de aprendizaje supervisado de ensamble que combina múltiples árboles de decisión independientes. Su predicción final es el promedio de todas las respuestas del "bosque", reduciendo el error y previniendo el sobreajuste.</p>
+            </div>
+
+            <p class="answer-paragraph"><strong>Funcionamiento:</strong> Durante el entrenamiento, el algoritmo crea una colección de árboles de decisión (bosque). Cada árbol se genera a partir de una muestra aleatoria del dataset (Bagging) y selecciona particiones de variables de manera aleatoria. Al realizar una predicción, promedia los resultados de todos los árboles para estimar el valor final (magnitud del sismo).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="rf">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag rf">Random Forest</span>
+            <div class="question-title">13. ¿Cuáles son las variables predictoras (entradas) y el target (salida) del modelo?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Variables Predictoras (Features / Entrada):</strong> Latitud (`lat`), Longitud (`lon`) y Profundidad (`depth`).</li>
+              <li class="answer-bullet-item"><strong>Variable Objetivo (Target / Salida):</strong> Magnitud del sismo (`magnitude`).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="rf">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag rf">Random Forest</span>
+            <div class="question-title">14. ¿Qué métricas se utilizaron para evaluar este regresor?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>MAE (Error Absoluto Medio):</strong> Promedio de la diferencia absoluta entre predicción y realidad. Indica cuánto falla el modelo (ej. &plusmn;0.4 Mw de magnitud).</li>
+              <li class="answer-bullet-item"><strong>MSE (Error Cuadrático Medio):</strong> Promedio de errores al cuadrado. Penaliza drásticamente los fallos grandes.</li>
+              <li class="answer-bullet-item"><strong>R² (Coeficiente de determinación):</strong> Indica el porcentaje de variabilidad de la magnitud explicada por la localización física del sismo.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="rf">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag rf">Random Forest</span>
+            <div class="question-title">15. Físicamente, ¿por qué es difícil estimar la magnitud de un sismo usando solo su ubicación?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Físicamente la magnitud depende de factores dinámicos no geográficos:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item">La longitud física de la ruptura en la falla tectónica.</li>
+              <li class="answer-bullet-item">La energía de esfuerzo elástico acumulada y fricción del suelo local.</li>
+            </ul>
+            <div class="answer-highlight info">
+              <strong>Aclaración metodológica:</strong> El modelo no simula física de ondas; calcula una <strong>estimación histórica espacial</strong>. Aprende qué magnitudes son esperables en ciertas coordenadas y profundidades según el registro de eventos históricos locales.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="rf">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag rf">Random Forest</span>
+            <div class="question-title">16. ¿Qué hiperparámetros son clave para regular el sobreajuste (overfitting)?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>`max_depth`:</strong> Limita la profundidad de los árboles para evitar que memoricen el ruido de los sismos de entrenamiento.</li>
+              <li class="answer-bullet-item"><strong>`min_samples_split`:</strong> Mínimo de sismos requeridos en un nodo para dividirse en ramas.</li>
+              <li class="answer-bullet-item"><strong>`n_estimators`:</strong> Cantidad de árboles en el bosque (más árboles estabilizan la predicción, pero requieren mayor cómputo).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="rf">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag rf">Random Forest</span>
+            <div class="question-title">17. ¿Cómo se integró el modelo entrenado en la interfaz de Streamlit?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Se exportó el modelo entrenado a formato binario usando `joblib`. En la app:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item">Se carga una sola vez en memoria mediante el decorador de caché `@st.cache_resource`.</li>
+              <li class="answer-bullet-item">Al recibir las coordenadas (`lat`, `lon`, `depth`) del usuario, se ejecuta `predict()` en tiempo real.</li>
+              <li class="answer-bullet-item">El dashboard actualiza instantáneamente los indicadores visuales y el radio de afectación.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== MODELO KDE ==================== -->
+      <div class="question-card" data-cat="kde">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag kde">Modelo KDE</span>
+            <div class="question-title">18. ¿Qué significa y cuál es el objetivo de la Estimación de Densidad Kernel (KDE)?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            
+            <div class="definition-card">
+              <h5>Definición de KDE (Kernel Density Estimation)</h5>
+              <p>Es un método estadístico no paramétrico que calcula la densidad de probabilidad continua de un conjunto de puntos. En cartografía, suaviza los sismos individuales convirtiéndolos en un mapa de color continuo (calor) para revelar hotspots de riesgo.</p>
+            </div>
+
+            <p class="answer-paragraph"><strong>Objetivo:</strong> Identificar y visualizar las zonas de mayor concentración de sismicidad histórica en Ecuador. Facilita la toma de decisiones al delimitar las zonas críticas sin verse sesgados por límites políticos cantonales o provinciales.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="kde">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag kde">Modelo KDE</span>
+            <div class="question-title">19. ¿Qué es el Bandwidth (ancho de banda) en KDE y cómo afecta al mapa de riesgo?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Es el parámetro que define el radio de suavizado de cada punto:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Bandwidth pequeño:</strong> Genera picos de calor muy pequeños y aislados en cada sismo exacto (mapa ruidoso, sin tendencias claras).</li>
+              <li class="answer-bullet-item"><strong>Bandwidth grande:</strong> Diluye los hotspots en una mancha gigante y borrosa, perdiendo el detalle geográfico de dónde se concentran las fallas.</li>
+              <li class="answer-bullet-item"><strong>Selección:</strong> Usamos valores entre 0.3 y 0.5 grados para un equilibrio óptimo de visualización regional.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="kde">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag kde">Modelo KDE</span>
+            <div class="question-title">20. ¿Por qué es importante utilizar la distancia de Haversine al hacer KDE geográfico?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Porque la Tierra es una esfera. Si calculamos distancias euclidianas planas sobre grados de latitud/longitud, se produce distorsión geométrica.</p>
+            <p class="answer-paragraph">La métrica de <strong>Haversine</strong> calcula la distancia real en kilómetros entre coordenadas esféricas del globo terrestre, garantizando que el radio del kernel de riesgo sea físicamente exacto.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="kde">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag kde">Modelo KDE</span>
+            <div class="question-title">21. ¿Cómo se transformaron las densidades abstractas del KDE en niveles de riesgo?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Se calculó la densidad del kernel sobre los sismos filtrados e históricos, normalizando los valores en una escala de 0 a 1. Se clasificó en 3 umbrales lógicos de riesgo:</p>
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Riesgo Bajo (Amarillo / &lt; 0.33):</strong> Zonas con baja recurrencia de sismos históricos.</li>
+              <li class="answer-bullet-item"><strong>Riesgo Moderado (Naranja / 0.33 a 0.66):</strong> Zonas con sismicidad periódica constante.</li>
+              <li class="answer-bullet-item"><strong>Riesgo Alto (Rojo / &ge; 0.66):</strong> Hotspots con acumulación crítica de sismos históricos (ej. fallas costeras e interandinas).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="kde">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag kde">Modelo KDE</span>
+            <div class="question-title">22. ¿Cómo ayuda el mapa KDE a las entidades gubernamentales de control?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Infraestructura y Prevención:</strong> Permite planificar el despliegue estratégico de centros de rescate, hospitales de campaña y reservas de ayuda en las áreas de mayor riesgo.</li>
+              <li class="answer-bullet-item"><strong>Planificación Territorial:</strong> Identifica áreas donde se deben exigir normas de construcción sismorresistentes más rigurosas de forma prioritaria.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TIPS DE DEFENSA ==================== -->
+      <div class="question-card" data-cat="defensa">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag defensa">Tips de Defensa</span>
+            <div class="question-title">23. ¿Cómo defender el modelo regresor ante jurados que cuestionen su fiabilidad física?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph"><strong>Respuesta sugerida:</strong> "Es cierto que la localización física no causa directamente la magnitud de un sismo. Por ello, el modelo no opera como predictor físico en tiempo real, sino como un **estimador empírico e histórico**. Evalúa la sismicidad registrada localmente en el pasado para predecir la **magnitud esperable** en caso de activarse un sismo en esa coordenada y profundidad, sirviendo para planificar escenarios hipotéticos de riesgo."</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="defensa">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag defensa">Tips de Defensa</span>
+            <div class="question-title">24. ¿Cuál fue el principal reto en el desarrollo del software?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <p class="answer-paragraph">Optimizar el rendimiento en la renderización de mapas de Streamlit. Al reejecutarse el script con cada slider, cargar miles de marcadores saturaba la UI. Se solucionó implementando **caché inteligente** (`@st.cache_data` y `@st.cache_resource`) y muestreando datos dinámicamente para lograr respuestas inmediatas en milisegundos.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card" data-cat="defensa">
+        <div class="question-header" onclick="toggleCard(this)">
+          <div class="question-info">
+            <span class="question-tag defensa">Tips de Defensa</span>
+            <div class="question-title">25. Si tuvieran más tiempo, ¿qué mejoras implementarían en los modelos?</div>
+          </div>
+          <div class="question-arrow">&#9662;</div>
+        </div>
+        <div class="question-body">
+          <div class="answer-content">
+            <ul class="answer-bullet-list">
+              <li class="answer-bullet-item"><strong>Enriquecimiento geológico:</strong> Integrar variables de fallas geológicas activas y tipos de suelo como entradas del Random Forest.</li>
+              <li class="answer-bullet-item"><strong>Modelamiento temporal:</strong> Utilizar modelos como procesos de Hawkes o redes LSTM para evaluar la probabilidad temporal de réplicas.</li>
+              <li class="answer-bullet-item"><strong>Ingesta automatizada:</strong> Programar tareas automáticas de web scraping para alimentar el dataset desde el IG-EPN en tiempo real.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Toggle Accordion Cards
+    function toggleCard(header) {
+      const card = header.closest('.question-card');
+      const isOpen = card.classList.contains('open');
+      
+      if (isOpen) {
+        card.classList.remove('open');
+        card.querySelector('.question-body').style.maxHeight = null;
+      } else {
+        card.classList.add('open');
+        const body = card.querySelector('.question-body');
+        const content = card.querySelector('.answer-content');
+        body.style.maxHeight = content.scrollHeight + 50 + "px";
+      }
+    }
+
+    // Expand / Collapse All
+    function expandAll() {
+      document.querySelectorAll('.question-card').forEach(card => {
+        if (!card.classList.contains('open')) {
+          card.classList.add('open');
+          const body = card.querySelector('.question-body');
+          const content = card.querySelector('.answer-content');
+          body.style.maxHeight = content.scrollHeight + 50 + "px";
+        }
+      });
+    }
+
+    function collapseAll() {
+      document.querySelectorAll('.question-card').forEach(card => {
+        card.classList.remove('open');
+        card.querySelector('.question-body').style.maxHeight = null;
+      });
+    }
+
+    // Filter by Category Sidebar
+    function filterCategory(cat) {
+      // Update Active Navigation Item
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-category') === cat) {
+          item.classList.add('active');
+        }
+      });
+
+      // Filter Cards
+      const cards = document.querySelectorAll('.question-card');
+      let count = 0;
+      cards.forEach(card => {
+        const cardCat = card.getAttribute('data-cat');
+        if (cat === 'todos' || cardCat === cat) {
+          card.style.display = 'block';
+          count++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Update total counter
+      document.getElementById('stat-total').textContent = count;
+    }
+
+    // Search Filter
+    function searchQuestions() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      const activeNav = document.querySelector('.nav-item.active');
+      const activeCat = activeNav ? activeNav.getAttribute('data-category') : 'todos';
+
+      const cards = document.querySelectorAll('.question-card');
+      let count = 0;
+
+      cards.forEach(card => {
+        const cardCat = card.getAttribute('data-cat');
+        const title = card.querySelector('.question-title').textContent.toLowerCase();
+        const body = card.querySelector('.answer-content').textContent.toLowerCase();
+
+        const matchesCat = (activeCat === 'todos' || cardCat === activeCat);
+        const matchesQuery = !query || title.includes(query) || body.includes(query);
+
+        if (matchesCat && matchesQuery) {
+          card.style.display = 'block';
+          count++;
+          if (query && !card.classList.contains('open')) {
+            card.classList.add('open');
+            const bodyDiv = card.querySelector('.question-body');
+            const content = card.querySelector('.answer-content');
+            bodyDiv.style.maxHeight = content.scrollHeight + 50 + "px";
+          }
+        } else {
+          card.style.display = 'none';
+          if (!query) {
+            card.classList.remove('open');
+            card.querySelector('.question-body').style.maxHeight = null;
+          }
+        }
+      });
+
+      document.getElementById('stat-total').textContent = count;
+    }
+  </script>
+</body>
+</html>
