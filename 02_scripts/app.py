@@ -15,8 +15,8 @@ CENTRO_MAPA_LON = -78.18
 ZOOM_INICIAL = 6
 
 # Umbrales de clasificación sísmica
-MAG_MODERADO = 5.0
-MAG_FUERTE = 6.0
+MAG_MODERADO = 4.5
+MAG_FUERTE = 5.5
 
 # Colores del sistema de alertas
 COLOR_LIGERO = "#4ade80"
@@ -122,7 +122,10 @@ def load_data() -> pd.DataFrame:
         pd.DataFrame: Dataset limpio y listo para visualización.
     """
     # 1. Rutas dinámicas basadas en la estructura de carpetas
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if "02_scripts" in os.path.abspath(__file__):
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(base, "01_datos_procesados", "sismos_procesados.parquet")
     
     # 2. Carga y limpieza inicial de columnas
@@ -183,7 +186,10 @@ def load_rf_model():
     """
     Carga el modelo Random Forest Regressor desde la carpeta de modelos.
     """
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if "02_scripts" in os.path.abspath(__file__):
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(base, "04_modelos", "random_forest_regressor.joblib")
     if os.path.exists(model_path):
         try:
@@ -246,8 +252,8 @@ if tab_sel == "Dashboard":
     max_mag     = round(df['magnitude'].max(),  2) if total else 0
     avg_dep     = round(df['depth'].mean(),     2) if total else 0
     n_regions   = df['region'].nunique() if total else 0
-    n_ligeros   = int((df['magnitude'] < 5).sum())
-    n_fuertes   = int((df['magnitude'] >= 6).sum())
+    n_ligeros   = int((df['magnitude'] < MAG_MODERADO).sum())
+    n_fuertes   = int((df['magnitude'] >= MAG_FUERTE).sum())
     n_superf    = int((df['depth'] < 70).sum())
 
     k1, k2, k3, k4 = st.columns(4)
@@ -288,7 +294,7 @@ if tab_sel == "Dashboard":
                 if mag >= MAG_FUERTE:
                     cat = "Fuerte"
                     nivel = "🔴 FUERTE"
-                elif mag >= 5:
+                elif mag >= MAG_MODERADO:
                     cat = "Moderado"
                     nivel = "🟠 MODERADO"
                 else:
@@ -363,12 +369,12 @@ if tab_sel == "Dashboard":
             # Líneas verticales para umbrales
             fig_dist.add_vline(x=MAG_MODERADO, line_dash="dash", line_color=COLOR_MODERADO, 
                               line_width=2,
-                              annotation_text="Moderado (5.0)", 
+                              annotation_text=f"Moderado ({MAG_MODERADO})", 
                               annotation_position="top right",
                               annotation_font_size=10)
             fig_dist.add_vline(x=MAG_FUERTE, line_dash="dash", line_color=COLOR_FUERTE,
                               line_width=2,
-                              annotation_text="Fuerte (6.0)", 
+                              annotation_text=f"Fuerte ({MAG_FUERTE})", 
                               annotation_position="top right",
                               annotation_font_size=10)
             
@@ -394,9 +400,9 @@ if tab_sel == "Dashboard":
         df['ym'] = df['date'].dt.to_period('M').astype(str)
         monthly = df.groupby('ym').apply(lambda g: pd.Series({
             'Total':    len(g),
-            'Ligero':   (g['magnitude'] < 5).sum(),
-            'Moderado': ((g['magnitude'] >= 5) & (g['magnitude'] < 6)).sum(),
-            'Fuerte':   (g['magnitude'] >= 6).sum(),
+            'Ligero':   (g['magnitude'] < MAG_MODERADO).sum(),
+            'Moderado': ((g['magnitude'] >= MAG_MODERADO) & (g['magnitude'] < MAG_FUERTE)).sum(),
+            'Fuerte':   (g['magnitude'] >= MAG_FUERTE).sum(),
         }), include_groups=False).reset_index()
 
         fig_freq = go.Figure()
@@ -505,26 +511,118 @@ elif tab_sel == "Análisis de Patrones":
         # Mostrar solo una muestra si son demasiados para no ralentizar
         sample_p = dp.sample(min(MAX_PUNTOS_MAPA, len(dp)), random_state=42) if len(dp) > MAX_PUNTOS_MAPA else dp
         
+        # Agregar círculos con colores según magnitud
         for _, row in sample_p.iterrows():
+            # Determinar color y categoría según magnitud
+            if row['magnitude'] >= MAG_FUERTE:
+                color = COLOR_FUERTE
+                categoria = "Fuerte"
+            elif row['magnitude'] >= MAG_MODERADO:
+                color = COLOR_MODERADO
+                categoria = "Moderado"
+            else:
+                color = COLOR_LIGERO
+                categoria = "Ligero"
+
             folium.CircleMarker(
                 location=[row['lat'], row['lon']],
-                radius=row['magnitude'] * 1.2,
-                color="#6366f1", weight=1, fill=True, fill_opacity=0.4,
-                tooltip=f"Hora: {row['hour']}:00 | Mag: {row['magnitude']}"
+                radius=row['magnitude'] * 1.5,
+                color="#ffffff", weight=1,
+                fill=True, fill_color=color, fill_opacity=0.8,
+                tooltip=folium.Tooltip(
+                    f"<div style='font-family:sans-serif;min-width:150px;padding:4px'>"
+                    f"<b>{categoria}</b> - Mag: {row['magnitude']:.2f}<br>"
+                    f"Profundidad: {row['depth']} km<br>"
+                    f"Hora: {row['hour']}:00</div>",
+                    sticky=True
+                )
             ).add_to(m_patron)
+        
+        # Añadir leyenda personalizada al mapa para indicar colores de cada categoría
+        import branca.element
+        legend_html = '''
+        <div style="position: fixed;
+                    bottom: 20px; left: 20px; width: 180px; background-color: white; opacity: 0.9; padding: 10px;
+                    border:2px solid #ccc; border-radius:5px; font-family:Arial;">
+          <b>Leyenda</b><br>
+          <i class="fa fa-circle" style="color:{}"></i> Ligero<br>
+          <i class="fa fa-circle" style="color:{}"></i> Moderado<br>
+          <i class="fa fa-circle" style="color:{}"></i> Fuerte
+        </div>
+        '''.format(COLOR_LIGERO, COLOR_MODERADO, COLOR_FUERTE)
+        macro = branca.element.MacroElement()
+        macro._template = branca.element.Template(legend_html)
+        m_patron.get_root().add_child(macro)
+        
         
         st_folium(m_patron, height=400, use_container_width=True)
 
     with col_dist_p:
         st.markdown('<div class="section-title">📊 Histograma Horario Detallado</div>', unsafe_allow_html=True)
         if total_patron:
-            # Mostrar la distribución dentro de las horas del día para ver si hay picos
-            by_hour = dp.groupby('hour').size().reset_index(name='count')
-            fig_h = px.bar(by_hour, x='hour', y='count', 
-                          labels={'hour':'Hora', 'count':'Eventos'},
-                          color_discrete_sequence=['#6366f1'])
-            fig_h.update_layout(height=400, margin=dict(l=20, r=20, t=20, b=20),
-                               xaxis=dict(tickmode='linear', tick0=0, dtick=1))
+            # Agrupar por hora y contar por categoría
+            by_hour = dp.groupby('hour').apply(lambda g: pd.Series({
+                'Ligero': (g['magnitude'] < MAG_MODERADO).sum(),
+                'Moderado': ((g['magnitude'] >= MAG_MODERADO) & (g['magnitude'] < MAG_FUERTE)).sum(),
+                'Fuerte': (g['magnitude'] >= MAG_FUERTE).sum(),
+                'Total': len(g)
+            }), include_groups=False).reset_index()
+            
+            # Crear gráfico de barras apiladas
+            fig_h = go.Figure()
+            
+            # Agregar cada categoría como una barra apilada
+            fig_h.add_trace(go.Bar(
+                x=by_hour['hour'],
+                y=by_hour['Ligero'],
+                name='Ligero',
+                marker_color=COLOR_LIGERO,
+                hovertemplate='Hora %{x}:00<br>Ligeros: %{y}<extra></extra>'
+            ))
+            
+            fig_h.add_trace(go.Bar(
+                x=by_hour['hour'],
+                y=by_hour['Moderado'],
+                name='Moderado',
+                marker_color=COLOR_MODERADO,
+                hovertemplate='Hora %{x}:00<br>Moderados: %{y}<extra></extra>'
+            ))
+            
+            fig_h.add_trace(go.Bar(
+                x=by_hour['hour'],
+                y=by_hour['Fuerte'],
+                name='Fuerte',
+                marker_color=COLOR_FUERTE,
+                hovertemplate='Hora %{x}:00<br>Fuertes: %{y}<extra></extra>'
+            ))
+            
+            fig_h.update_layout(
+                barmode='stack',
+                height=400,
+                margin=dict(l=20, r=20, t=20, b=20),
+                xaxis=dict(
+                    title='Hora',
+                    tickmode='linear',
+                    tick0=0,
+                    dtick=1,
+                    showgrid=True,
+                    gridcolor='#f0f0f0'
+                ),
+                yaxis=dict(
+                    title='Eventos',
+                    showgrid=True,
+                    gridcolor='#f0f0f0'
+                ),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                )
+            )
             st.plotly_chart(fig_h, use_container_width=True)
 
     st.info(f"💡 Este análisis permite ver si en la zona **{reg_patron}**, durante el intervalo **{h_start}:00 - {h_end}:00**, existe una acumulación inusual de eventos en comparación con otros horarios.")
@@ -575,10 +673,10 @@ else:
         pred_mag = float(rf_model.predict(input_data)[0])
 
         # Determinar categorías y colores basados en la magnitud predicha
-        if pred_mag >= 6.0:
+        if pred_mag >= MAG_FUERTE:
             cat_name, cat_color, cat_badge = "FUERTE", COLOR_FUERTE, "badge-red"
             cat_desc = "Sismo de gran intensidad."
-        elif pred_mag >= 5.0:
+        elif pred_mag >= MAG_MODERADO:
             cat_name, cat_color, cat_badge = "MODERADO", COLOR_MODERADO, "badge-orange"
             cat_desc = "Sismo moderado. Daños menores."
         else:
@@ -622,14 +720,14 @@ else:
                         'borderwidth': 1,
                         'bordercolor': "#e0e4e8",
                         'steps': [
-                            {'range': [1.0, 5.0], 'color': '#f3f4f6'},
-                            {'range': [5.0, 6.0], 'color': '#ffedd5'},
-                            {'range': [6.0, 8.0], 'color': '#fee2e2'}
+                            {'range': [1.0, MAG_MODERADO], 'color': '#f3f4f6'},
+                            {'range': [MAG_MODERADO, MAG_FUERTE], 'color': '#ffedd5'},
+                            {'range': [MAG_FUERTE, 8.0], 'color': '#fee2e2'}
                         ],
                         'threshold': {
                             'line': {'color': "red", 'width': 3},
                             'thickness': 0.75,
-                            'value': 6.0
+                            'value': MAG_FUERTE
                         }
                     }
                 ))
@@ -669,7 +767,7 @@ else:
             # Marcador arrastrable
             folium.Marker(
                 location=[st.session_state.rf_lat, st.session_state.rf_lon],
-                icon=folium.Icon(color="red" if pred_mag >= 6.0 else ("orange" if pred_mag >= 5.0 else "blue"), icon="info-sign"),
+                icon=folium.Icon(color="red" if pred_mag >= MAG_FUERTE else ("orange" if pred_mag >= MAG_MODERADO else "blue"), icon="info-sign"),
                 draggable=True,
                 tooltip="Haz clic en el mapa para cambiar ubicación"
             ).add_to(m_pred)
